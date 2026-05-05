@@ -1,7 +1,6 @@
 package com.example.restaurant.model;
 
 import jakarta.persistence.*;
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
