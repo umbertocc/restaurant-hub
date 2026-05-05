@@ -41,7 +41,8 @@ export default function ProfiloPage() {
 
   if (!ristorante) return null;
 
-  const prenotazioneUrl = `${window.location.origin}/prenota/${ristorante.id}`;
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  const prenotazioneUrl = `${window.location.origin}${base}/prenota/${ristorante.id}`;
 
   const downloadQR = () => {
     const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
