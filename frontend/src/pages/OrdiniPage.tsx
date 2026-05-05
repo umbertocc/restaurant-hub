@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -63,6 +63,23 @@ export default function OrdiniPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<StatoOrdine | 'ALL'>('ALL');
   const [showModal, setShowModal] = useState(false);
+  const [newOrderAlert, setNewOrderAlert] = useState(false);
+  const knownIds = useRef<Set<string>>(new Set());
+
+  const playBeep = () => {
+    try {
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.4, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.4);
+    } catch { /* browser bloccato */ }
+  };
 
   // New order form state
   const [tavoloId, setTavoloId] = useState('');
@@ -71,19 +88,34 @@ export default function OrdiniPage() {
   const [creating, setCreating] = useState(false);
   const [menuSearch, setMenuSearch] = useState('');
 
-  const load = () => {
+  const load = (isPolling = false) => {
     if (!ristorante) return;
     Promise.all([getOrdini(ristorante.id), getMenu(ristorante.id)])
       .then(([o, m]) => {
-        const ordiniArr = Array.isArray(o) ? o : [];
+        const ordiniArr = (Array.isArray(o) ? o : []).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
         const menuArr = Array.isArray(m) ? m : [];
-        setOrdini(ordiniArr.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+        if (isPolling && knownIds.current.size > 0) {
+          const nuovi = ordiniArr.filter((ord) => !knownIds.current.has(ord.id));
+          if (nuovi.length > 0) {
+            playBeep();
+            setNewOrderAlert(true);
+            setTimeout(() => setNewOrderAlert(false), 5000);
+          }
+        }
+        ordiniArr.forEach((ord) => knownIds.current.add(ord.id));
+        setOrdini(ordiniArr);
         setMenuItems(menuArr.filter((i) => i.disponibile));
       })
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, [ristorante]);
+  useEffect(() => {
+    load();
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') load(true);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [ristorante]);
 
   const filtered = filter === 'ALL' ? ordini : ordini.filter((o) => o.stato === filter);
 
@@ -147,6 +179,11 @@ export default function OrdiniPage() {
 
   return (
     <div className="p-6 space-y-5">
+      {newOrderAlert && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white px-6 py-3 rounded-xl shadow-lg font-semibold flex items-center gap-2 animate-bounce">
+          🔔 Nuovo ordine ricevuto!
+        </div>
+      )}
       <div className="page-header">
         <div>
           <h1 className="page-title">Ordini</h1>
