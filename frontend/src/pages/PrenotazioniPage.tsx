@@ -101,7 +101,7 @@ export default function PrenotazioniPage() {
         </div>
         {ristorante && (
           <a
-            href={`/prenota/${ristorante.id}`}
+            href={`${window.location.origin}${import.meta.env.BASE_URL.replace(/\/$/, '')}/prenota/${ristorante.id}`}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-secondary gap-2 text-sm"
