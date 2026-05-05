@@ -1,3 +1,7 @@
+# GCP credentials - MAI committare
+gcloud-key.json
+*.json.key
+
 # Maven
 target/
 *.class
