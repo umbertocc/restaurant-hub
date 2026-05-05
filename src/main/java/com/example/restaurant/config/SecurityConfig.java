@@ -26,6 +26,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Preflight CORS
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // Health check (keep-alive)
+                .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                 // Endpoint pubblici (clienti)
                 .requestMatchers(HttpMethod.POST, "/api/prenotazioni").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/menu").permitAll()

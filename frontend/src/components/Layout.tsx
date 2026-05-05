@@ -2,12 +2,23 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
+import { useAuth } from '../context/AuthContext';
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { newOrderAlert, dismissOrderAlert } = useAuth();
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
+      {newOrderAlert && (
+        <div
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white px-6 py-3 rounded-xl shadow-lg font-semibold flex items-center gap-3 animate-bounce cursor-pointer"
+          onClick={dismissOrderAlert}
+        >
+          🔔 Nuovo ordine ricevuto!
+          <span className="text-xs opacity-75">(tocca per chiudere)</span>
+        </div>
+      )}
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
