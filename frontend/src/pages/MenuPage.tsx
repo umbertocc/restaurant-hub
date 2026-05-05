@@ -184,14 +184,12 @@ export default function MenuPage() {
                   <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        {item.immagineUrl ? (
+                        {item.immagineUrl && (
                           <img
                             src={item.immagineUrl}
                             alt={item.nome}
                             className="w-10 h-10 rounded-lg object-cover shrink-0"
                           />
-                        ) : (
-                          <div className="w-10 h-10 rounded-lg bg-gray-100 shrink-0" />
                         )}
                         <div>
                           <p className="font-medium text-gray-900">{item.nome}</p>
