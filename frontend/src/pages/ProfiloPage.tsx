@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { Save, Store, Download, QrCode } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext';
@@ -11,7 +11,6 @@ export default function ProfiloPage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const qrRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (ristorante) {
@@ -40,6 +39,8 @@ export default function ProfiloPage() {
     }
   };
 
+  if (!ristorante) return null;
+
   const prenotazioneUrl = `${window.location.origin}/prenota/${ristorante.id}`;
 
   const downloadQR = () => {
@@ -50,8 +51,6 @@ export default function ProfiloPage() {
     link.href = canvas.toDataURL('image/png');
     link.click();
   };
-
-  if (!ristorante) return null;
 
   return (
     <div className="p-6 max-w-2xl space-y-6">
