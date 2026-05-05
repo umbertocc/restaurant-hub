@@ -14,6 +14,7 @@ import AbbinamentiPage from './pages/AbbinamentiPage';
 import ProfiloPage from './pages/ProfiloPage';
 import TavoliPage from './pages/TavoliPage';
 import PublicPrenotazionePage from './pages/PublicPrenotazionePage';
+import PublicTavoloPage from './pages/PublicTavoloPage';
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/registrati" element={<RegisterPage />} />
           <Route path="/prenota/:ristoranteId" element={<PublicPrenotazionePage />} />
+          <Route path="/tavolo/:ristoranteId/:tavoloId" element={<PublicTavoloPage />} />
 
           {/* Protected */}
           <Route

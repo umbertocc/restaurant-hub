@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Check, X, QrCode } from 'lucide-react';
+import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext';
 import { getTavoli, createTavolo, updateTavolo, deleteTavolo } from '../api/tavoli';
 import { Tavolo } from '../types';
@@ -11,6 +12,7 @@ export default function TavoliPage() {
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [qrTavolo, setQrTavolo] = useState<Tavolo | null>(null);
 
   const emptyForm = { numero: '', capacita: '', posizione: '', disponibile: true };
   const [form, setForm] = useState(emptyForm);
@@ -186,6 +188,13 @@ export default function TavoliPage() {
                 </div>
                 <div className="flex gap-2">
                   <button
+                    onClick={() => setQrTavolo(t)}
+                    className="p-2 rounded-lg text-gray-500 hover:bg-gray-100"
+                    title="QR Code"
+                  >
+                    <QrCode className="w-4 h-4" />
+                  </button>
+                  <button
                     onClick={() => handleEdit(t)}
                     className="p-2 rounded-lg text-gray-500 hover:bg-gray-100"
                   >
@@ -202,6 +211,41 @@ export default function TavoliPage() {
             ))}
         </div>
       )}
+      {/* QR Modal */}
+      {qrTavolo && ristorante && (() => {
+        const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+        const url = `${window.location.origin}${base}/tavolo/${ristorante.id}/${qrTavolo.id}`;
+        const downloadQR = () => {
+          const canvas = document.getElementById('qr-tavolo') as HTMLCanvasElement;
+          if (!canvas) return;
+          const link = document.createElement('a');
+          link.download = `qr-tavolo-${qrTavolo.numero}.png`;
+          link.href = canvas.toDataURL();
+          link.click();
+        };
+        return (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full text-center">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-900">QR · Tavolo {qrTavolo.numero}</h2>
+                <button onClick={() => setQrTavolo(null)} className="p-1 rounded-lg hover:bg-gray-100">
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+              <div className="flex justify-center mb-4">
+                <QRCodeCanvas id="qr-tavolo" value={url} size={200} />
+              </div>
+              <p className="text-xs text-gray-500 break-all mb-4">{url}</p>
+              <button
+                onClick={downloadQR}
+                className="w-full bg-red-600 text-white py-2 rounded-xl font-semibold hover:bg-red-700"
+              >
+                Scarica QR Code
+              </button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

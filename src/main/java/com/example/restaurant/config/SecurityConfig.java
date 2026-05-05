@@ -30,6 +30,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/prenotazioni").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/menu").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/abbinamenti/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/ristoranti/*").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/ordini").permitAll()
                 // Registrazione ristorante
                 .requestMatchers(HttpMethod.POST, "/api/ristoranti").permitAll()
                 // Login
