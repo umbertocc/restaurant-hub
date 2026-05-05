@@ -151,8 +151,16 @@ export default function PublicTavoloPage() {
                 return (
                   <div
                     key={item.id}
-                    className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center justify-between gap-3"
+                    className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
                   >
+                    {item.immagineUrl && (
+                      <img
+                        src={item.immagineUrl}
+                        alt={item.nome}
+                        className="w-full h-40 object-cover"
+                      />
+                    )}
+                    <div className="p-4 flex items-center justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-gray-900">{item.nome}</p>
                       {item.descrizione && (
@@ -188,6 +196,7 @@ export default function PublicTavoloPage() {
                           <Plus className="w-4 h-4" />
                         </button>
                       )}
+                    </div>
                     </div>
                   </div>
                 );
