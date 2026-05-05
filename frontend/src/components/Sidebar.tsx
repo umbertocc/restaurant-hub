@@ -22,7 +22,7 @@ const navItems = [
   { path: '/profilo', label: 'Profilo', icon: Settings },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const { ristorante, logout } = useAuth();
 
   return (
@@ -47,6 +47,7 @@ export default function Sidebar() {
             key={path}
             to={path}
             end={path === '/'}
+            onClick={onClose}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive

@@ -24,6 +24,8 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                // Preflight CORS
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // Endpoint pubblici (clienti)
                 .requestMatchers(HttpMethod.POST, "/api/prenotazioni").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/menu").permitAll()
