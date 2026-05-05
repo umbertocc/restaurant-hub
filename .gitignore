@@ -1,0 +1,29 @@
+# Maven
+target/
+*.class
+*.jar
+*.war
+
+# IDE
+.idea/
+.eclipse/
+*.iml
+.settings/
+.classpath
+.project
+
+# Spring Boot - NON committare le properties con credenziali
+# src/main/resources/application.properties
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
