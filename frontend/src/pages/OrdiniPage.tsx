@@ -65,10 +65,28 @@ export default function OrdiniPage() {
   const [showModal, setShowModal] = useState(false);
   const [newOrderAlert, setNewOrderAlert] = useState(false);
   const knownIds = useRef<Set<string>>(new Set());
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  // Sblocca AudioContext al primo gesto utente (autoplay policy)
+  useEffect(() => {
+    const unlock = () => {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContext();
+      }
+      audioCtxRef.current.resume();
+    };
+    window.addEventListener('click', unlock);
+    window.addEventListener('keydown', unlock);
+    return () => {
+      window.removeEventListener('click', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, []);
 
   const playBeep = () => {
     try {
-      const ctx = new AudioContext();
+      const ctx = audioCtxRef.current;
+      if (!ctx || ctx.state !== 'running') return;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
@@ -78,7 +96,7 @@ export default function OrdiniPage() {
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.4);
-    } catch { /* browser bloccato */ }
+    } catch { /* ignorato */ }
   };
 
   // New order form state
