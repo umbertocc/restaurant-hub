@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ChefHat, Plus, Minus, ShoppingCart, CheckCircle } from 'lucide-react';
+import { ChefHat, Plus, Minus, ShoppingCart, CheckCircle, Wine, X } from 'lucide-react';
 import { getRistorante } from '../api/ristoranti';
 import { getMenu } from '../api/menu';
 import { createOrdine } from '../api/ordini';
+import { getSuggerimenti } from '../api/abbinamenti';
 import { Ristorante, MenuItem, CategoriaMenu } from '../types';
+
+const FOOD_CATS: CategoriaMenu[] = ['ANTIPASTO', 'PRIMO', 'SECONDO', 'CONTORNO', 'DESSERT'];
 
 interface CartItem {
   item: MenuItem;
@@ -35,6 +38,8 @@ export default function PublicTavoloPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [abbModal, setAbbModal] = useState<{ item: MenuItem; suggerimenti: MenuItem[] } | null>(null);
+  const [loadingAbb, setLoadingAbb] = useState(false);
 
   useEffect(() => {
     if (!ristoranteId) return;
@@ -64,6 +69,17 @@ export default function PublicTavoloPage() {
       }
       return { ...prev, [itemId]: { ...existing, quantita: existing.quantita - 1 } };
     });
+  };
+
+  const openAbbModal = async (item: MenuItem) => {
+    setAbbModal({ item, suggerimenti: [] });
+    setLoadingAbb(true);
+    try {
+      const suggerimenti = await getSuggerimenti(item.id);
+      setAbbModal({ item, suggerimenti });
+    } finally {
+      setLoadingAbb(false);
+    }
   };
 
   const cartItems = Object.values(cart);
@@ -170,6 +186,15 @@ export default function PublicTavoloPage() {
                         <p className="text-xs text-amber-600 mt-0.5">⚠ {item.allergeni}</p>
                       )}
                       <p className="text-red-600 font-bold mt-1">€{item.prezzo.toFixed(2)}</p>
+                      {FOOD_CATS.includes(item.categoria) && (
+                        <button
+                          onClick={() => openAbbModal(item)}
+                          className="mt-1.5 flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 font-medium"
+                        >
+                          <Wine className="w-3 h-3" />
+                          Abbinamenti consigliati
+                        </button>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {inCart > 0 ? (
@@ -205,6 +230,51 @@ export default function PublicTavoloPage() {
           </div>
         ))}
       </div>
+
+      {/* Abbinamenti bottom sheet */}
+      {abbModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50" onClick={() => setAbbModal(null)}>
+          <div
+            className="bg-white rounded-t-2xl w-full max-w-2xl p-6 max-h-[70vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Wine className="w-5 h-5 text-purple-600" />
+                <h3 className="font-bold text-gray-900">Abbinamenti per {abbModal.item.nome}</h3>
+              </div>
+              <button onClick={() => setAbbModal(null)} className="p-1 text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {loadingAbb ? (
+              <div className="flex justify-center py-6">
+                <div className="w-6 h-6 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : abbModal.suggerimenti.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">Nessun abbinamento disponibile per questo piatto.</p>
+            ) : (
+              <div className="space-y-3">
+                {abbModal.suggerimenti.map((s) => (
+                  <div key={s.id} className="flex items-center justify-between bg-gray-50 rounded-xl p-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-800">{s.nome}</p>
+                      {s.descrizione && <p className="text-xs text-gray-500 truncate">{s.descrizione}</p>}
+                      <p className="text-red-600 font-bold text-sm mt-0.5">€{s.prezzo.toFixed(2)}</p>
+                    </div>
+                    <button
+                      onClick={() => addToCart(s)}
+                      className="ml-3 w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 shrink-0"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Cart footer */}
       {cartItems.length > 0 && (
