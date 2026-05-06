@@ -3,6 +3,7 @@ package com.example.restaurant.controller;
 import com.example.restaurant.model.Ristorante;
 import com.example.restaurant.repository.RistoranteRepository;
 import com.example.restaurant.service.NotificaService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,9 @@ public class RistoranteController {
     private final RistoranteRepository ristoranteRepository;
     private final PasswordEncoder passwordEncoder;
     private final NotificaService notificaService;
+
+    @Value("${registration.code:}")
+    private String registrationCode;
 
     public RistoranteController(RistoranteRepository ristoranteRepository,
                                 PasswordEncoder passwordEncoder,
@@ -42,7 +46,16 @@ public class RistoranteController {
     // POST /api/ristoranti  (registrazione nuovo ristorante)
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Ristorante registra(@RequestBody Ristorante ristorante) {
+    public Ristorante registra(@RequestHeader(value = "X-Registration-Code", required = false) String code,
+                               @RequestBody Ristorante ristorante) {
+        if (registrationCode == null || registrationCode.isBlank()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "La registrazione è disabilitata");
+        }
+        if (!registrationCode.equals(code)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Codice di registrazione non valido");
+        }
         if (ristoranteRepository.existsByEmail(ristorante.getEmail())) {
             throw new org.springframework.web.server.ResponseStatusException(
                     HttpStatus.CONFLICT, "Email già registrata");

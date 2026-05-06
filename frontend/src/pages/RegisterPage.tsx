@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChefHat, ArrowLeft, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { ChefHat, ArrowLeft, CheckCircle, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { registerRistorante } from '../api/ristoranti';
 
 export default function RegisterPage() {
@@ -14,6 +14,7 @@ export default function RegisterPage() {
     citta: '',
   });
   const [showPwd, setShowPwd] = useState(false);
+  const [registrationCode, setRegistrationCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -26,7 +27,7 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      await registerRistorante(form);
+      await registerRistorante(form, registrationCode);
       setSuccess(true);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } }).response?.data?.message;
@@ -144,6 +145,19 @@ export default function RegisterPage() {
                 value={form.indirizzo}
                 onChange={(e) => set('indirizzo', e.target.value)}
               />
+            </div>
+            <div>
+              <label className="label">Codice di registrazione *</label>
+              <div className="relative">
+                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  className="input pl-9"
+                  placeholder="Inserisci il codice fornito dall'amministratore"
+                  value={registrationCode}
+                  onChange={(e) => setRegistrationCode(e.target.value)}
+                  required
+                />
+              </div>
             </div>
 
             {error && (
