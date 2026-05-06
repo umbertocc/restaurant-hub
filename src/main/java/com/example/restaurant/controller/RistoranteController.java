@@ -2,6 +2,7 @@ package com.example.restaurant.controller;
 
 import com.example.restaurant.model.Ristorante;
 import com.example.restaurant.repository.RistoranteRepository;
+import com.example.restaurant.service.NotificaService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -14,11 +15,14 @@ public class RistoranteController {
 
     private final RistoranteRepository ristoranteRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NotificaService notificaService;
 
     public RistoranteController(RistoranteRepository ristoranteRepository,
-                                PasswordEncoder passwordEncoder) {
+                                PasswordEncoder passwordEncoder,
+                                NotificaService notificaService) {
         this.ristoranteRepository = ristoranteRepository;
         this.passwordEncoder = passwordEncoder;
+        this.notificaService = notificaService;
     }
 
     // GET /api/ristoranti  (solo super-admin)
@@ -46,7 +50,9 @@ public class RistoranteController {
         if (ristorante.getPasswordHash() != null && !ristorante.getPasswordHash().isBlank()) {
             ristorante.setPasswordHash(passwordEncoder.encode(ristorante.getPasswordHash()));
         }
-        return ristoranteRepository.save(ristorante);
+        Ristorante salvato = ristoranteRepository.save(ristorante);
+        notificaService.notificaNuovaRegistrazione(salvato);
+        return salvato;
     }
 
     // PUT /api/ristoranti/{id}  (admin ristorante)
