@@ -97,7 +97,10 @@ export default function CucinaPage() {
       // Rileva nuovi ordini
       if (knownIds.current.size > 0 && !silent) {
         const nuovi = attivi.filter((o) => !knownIds.current.has(o.id));
-        if (nuovi.length > 0) playBeep();
+        if (nuovi.length > 0) {
+          playBeep();
+          if (window.navigator.vibrate) window.navigator.vibrate(200);
+        }
       }
       attivi.forEach((o) => knownIds.current.add(o.id));
 
