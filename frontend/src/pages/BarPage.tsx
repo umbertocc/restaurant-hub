@@ -139,14 +139,15 @@ export default function BarPage() {
   }, [ristorante, carica]);
 
   const avanza = async (ordine: Ordine) => {
-    const prossimoStato: StatoOrdine = ordine.stato === 'APERTO' ? 'IN_PREPARAZIONE' : 'SERVITO';
+    // Da APERTO si passa direttamente a SERVITO, saltando IN_PREPARAZIONE
+    const prossimoStato: StatoOrdine = ordine.stato === 'APERTO' ? 'SERVITO' : 'CHIUSO';
     setUpdatingId(ordine.id);
     try {
       await updateStatoOrdine(ordine.id, prossimoStato);
       setOrdini((prev) =>
         prev
           .map((o) => (o.id === ordine.id ? { ...o, stato: prossimoStato } : o))
-          .filter((o) => o.stato === 'APERTO' || o.stato === 'IN_PREPARAZIONE')
+          .filter((o) => o.stato === 'APERTO' || o.stato === 'SERVITO')
       );
     } catch { /* ignora */ } finally {
       setUpdatingId(null);
@@ -267,7 +268,7 @@ export default function BarPage() {
                     onClick={() => avanza(ordine)}
                     disabled={isUpdating}
                   >
-                    {isAperto ? 'In preparazione' : 'Servito'}
+                    {isAperto ? 'Servito' : 'Consegnato'}
                   </button>
                 </div>
               </div>
