@@ -80,7 +80,6 @@ export default function OrdineDetailPage() {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-xl font-bold text-gray-900 mb-1">Tavolo {ordine.tavoloId}</h1>
-            <p className="text-xs text-gray-400 font-mono break-all">ID: {ordine.id}</p>
             <p className="text-sm text-gray-500 mt-1">
               Creato:{' '}
               {(() => {
