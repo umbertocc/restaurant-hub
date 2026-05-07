@@ -69,17 +69,18 @@ export default function CucinaPage() {
     try {
       const ctx = audioCtxRef.current;
       if (!ctx || ctx.state !== 'running') return;
-      // Suono doppio per cucina
-      [0, 0.3].forEach((delay) => {
+      // Suono più lungo e più acuto
+      [0, 0.5].forEach((delay) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
         gain.connect(ctx.destination);
-        osc.frequency.value = 880;
-        gain.gain.setValueAtTime(0.5, ctx.currentTime + delay);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.3);
+        osc.type = 'square';
+        osc.frequency.value = 1760; // più acuto
+        gain.gain.setValueAtTime(0.7, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.5);
         osc.start(ctx.currentTime + delay);
-        osc.stop(ctx.currentTime + delay + 0.3);
+        osc.stop(ctx.currentTime + delay + 0.5);
       });
     } catch { /* ignorato */ }
   }, []);
