@@ -254,7 +254,7 @@ export default function PizzeriaPage() {
                   <ul className="divide-y divide-gray-800">
                     {ordine.items.map((item, idx) => (
                       <li key={idx} className="py-1 flex items-center justify-between">
-                        <span className="font-medium text-white">{item.nomeMenuItem ?? `Prodotto #${item.menuItemId}`}</span>
+                        <span className="font-medium text-white">{item.nomeMenuItem ?? `Prodotto #${item.id}`}</span>
                         <span className="text-gray-400">x{item.quantita}</span>
                       </li>
                     ))}

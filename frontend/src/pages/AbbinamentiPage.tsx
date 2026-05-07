@@ -130,7 +130,7 @@ export default function AbbinamentiPage() {
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                <p className="font-medium">{item.nomeMenuItem ?? `Prodotto #${item.menuItemId}`}</p>
+                <p className="font-medium">{item.nome}</p>
                 <p className={`text-xs ${selectedPiatto?.id === item.id ? 'text-red-200' : 'text-gray-400'}`}>
                   {item.categoria}
                 </p>
