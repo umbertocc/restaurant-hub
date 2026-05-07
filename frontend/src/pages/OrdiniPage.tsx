@@ -6,7 +6,19 @@ import { Plus, X, ShoppingCart, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getOrdini, createOrdine, updateStatoOrdine } from '../api/ordini';
 import { getMenu } from '../api/menu';
-import { Ordine, MenuItem, OrdineItemDTO, StatoOrdine } from '../types';
+import { Ordine, MenuItem, OrdineItemDTO, StatoOrdine, CategoriaMenu } from '../types';
+
+const CAT_PILLS: { label: string; value: CategoriaMenu | 'ALL' }[] = [
+  { label: 'Tutti', value: 'ALL' },
+  { label: 'Antipasti', value: 'ANTIPASTO' },
+  { label: 'Primi', value: 'PRIMO' },
+  { label: 'Secondi', value: 'SECONDO' },
+  { label: 'Contorni', value: 'CONTORNO' },
+  { label: 'Dessert', value: 'DESSERT' },
+  { label: 'Vini', value: 'VINO_ROSSO' },
+  { label: 'Cocktail', value: 'COCKTAIL' },
+  { label: 'Bibite', value: 'BIBITA' },
+];
 
 const STATO_STYLE: Record<StatoOrdine, string> = {
   APERTO: 'badge bg-blue-100 text-blue-700',
@@ -70,6 +82,7 @@ export default function OrdiniPage() {
   const [orderNote, setOrderNote] = useState('');
   const [creating, setCreating] = useState(false);
   const [menuSearch, setMenuSearch] = useState('');
+  const [menuCatFilter, setMenuCatFilter] = useState<CategoriaMenu | 'ALL'>('ALL');
 
   const load = () => {
     if (!ristorante) return;
@@ -134,14 +147,22 @@ export default function OrdiniPage() {
       setCart([]);
       setTavoloId('');
       setOrderNote('');
+      setMenuSearch('');
+      setMenuCatFilter('ALL');
     } finally {
       setCreating(false);
     }
   };
 
-  const filteredMenu = menuItems.filter((m) =>
-    m.nome.toLowerCase().includes(menuSearch.toLowerCase()),
-  );
+  const filteredMenu = menuItems.filter((m) => {
+    const matchSearch = m.nome.toLowerCase().includes(menuSearch.toLowerCase());
+    const matchCat = menuCatFilter === 'ALL'
+      ? true
+      : menuCatFilter === 'VINO_ROSSO'
+        ? ['VINO_ROSSO', 'VINO_BIANCO', 'VINO_ROSE'].includes(m.categoria)
+        : m.categoria === menuCatFilter;
+    return matchSearch && matchCat;
+  });
 
   if (loading) return <Spinner />;
 
@@ -261,11 +282,27 @@ export default function OrdiniPage() {
                 <label className="label">Aggiungi piatti</label>
                 <input
                   type="text"
-                  className="input mb-3"
+                  className="input mb-2"
                   placeholder="Cerca nel menu…"
                   value={menuSearch}
                   onChange={(e) => setMenuSearch(e.target.value)}
                 />
+                <div className="flex gap-1.5 flex-wrap mb-3">
+                  {CAT_PILLS.map((p) => (
+                    <button
+                      key={p.value}
+                      type="button"
+                      onClick={() => setMenuCatFilter(p.value)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${
+                        menuCatFilter === p.value
+                          ? 'bg-red-600 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
                   {filteredMenu.map((m) => (
                     <button
