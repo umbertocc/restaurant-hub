@@ -29,6 +29,9 @@ public class OrdineItem {
 
     private String note;
 
+    @Transient
+    private String nomeMenuItem;
+
     // Getters & Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -47,6 +50,9 @@ public class OrdineItem {
 
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
+
+    public String getNomeMenuItem() { return nomeMenuItem; }
+    public void setNomeMenuItem(String nomeMenuItem) { this.nomeMenuItem = nomeMenuItem; }
 
     public BigDecimal getSubtotale() {
         return prezzoUnitario.multiply(BigDecimal.valueOf(quantita));

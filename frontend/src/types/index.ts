@@ -61,6 +61,7 @@ export type StatoOrdine =
 export interface OrdineItem {
   id: string;
   menuItemId: number;
+  nomeMenuItem?: string;
   quantita: number;
   prezzoUnitario: number;
   note?: string;

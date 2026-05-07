@@ -135,7 +135,7 @@ export default function OrdineDetailPage() {
             <div key={item.id} className="flex items-center justify-between py-3">
               <div>
                 <p className="text-sm font-medium text-gray-800">
-                  {item.quantita}× <span className="text-gray-600">(ID piatto: {item.menuItemId})</span>
+                  {item.quantita}× <span className="text-gray-800">{item.nomeMenuItem ?? `Prodotto #${item.menuItemId}`}</span>
                 </p>
                 {item.note && <p className="text-xs text-gray-400 mt-0.5 italic">"{item.note}"</p>}
               </div>

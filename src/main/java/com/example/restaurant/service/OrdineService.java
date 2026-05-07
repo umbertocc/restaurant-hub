@@ -13,7 +13,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class OrdineService {
@@ -52,6 +54,7 @@ public class OrdineService {
             item.setQuantita(itemDto.getQuantita());
             item.setPrezzoUnitario(menuItem.getPrezzo());
             item.setNote(itemDto.getNote());
+            item.setNomeMenuItem(menuItem.getNome());
 
             ordine.getItems().add(item);
             totale = totale.add(item.getSubtotale());
@@ -62,12 +65,30 @@ public class OrdineService {
     }
 
     public Ordine getById(UUID id) {
-        return ordineRepository.findById(id)
+        Ordine ordine = ordineRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordine non trovato"));
+        popolaNomiItems(List.of(ordine));
+        return ordine;
     }
 
     public List<Ordine> getByRistorante(Long ristoranteId) {
-        return ordineRepository.findByRistoranteId(ristoranteId);
+        List<Ordine> ordini = ordineRepository.findByRistoranteId(ristoranteId);
+        popolaNomiItems(ordini);
+        return ordini;
+    }
+
+    private void popolaNomiItems(List<Ordine> ordini) {
+        List<Long> ids = ordini.stream()
+                .flatMap(o -> o.getItems().stream())
+                .map(OrdineItem::getMenuItemId)
+                .distinct()
+                .collect(Collectors.toList());
+        if (ids.isEmpty()) return;
+        Map<Long, String> nomiById = menuItemRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(MenuItem::getId, MenuItem::getNome));
+        ordini.forEach(o -> o.getItems().forEach(item ->
+                item.setNomeMenuItem(nomiById.getOrDefault(item.getMenuItemId(), "Prodotto #" + item.getMenuItemId()))
+        ));
     }
 
     @Transactional
