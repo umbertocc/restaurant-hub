@@ -15,9 +15,11 @@ const CAT_PILLS: { label: string; value: CategoriaMenu | 'ALL' }[] = [
   { label: 'Secondi', value: 'SECONDO' },
   { label: 'Contorni', value: 'CONTORNO' },
   { label: 'Dessert', value: 'DESSERT' },
+  { label: 'Pizza', value: 'PIZZA' },
   { label: 'Vini', value: 'VINO_ROSSO' },
   { label: 'Cocktail', value: 'COCKTAIL' },
   { label: 'Bibite', value: 'BIBITA' },
+  { label: 'Acqua', value: 'ACQUA' },
 ];
 
 const STATO_STYLE: Record<StatoOrdine, string> = {
