@@ -147,7 +147,7 @@ export default function BarPage() {
       setOrdini((prev) =>
         prev
           .map((o) => (o.id === ordine.id ? { ...o, stato: prossimoStato } : o))
-          .filter((o) => o.stato === 'APERTO' || o.stato === 'SERVITO')
+          .filter((o) => o.stato === 'APERTO')
       );
     } catch { /* ignora */ } finally {
       setUpdatingId(null);
