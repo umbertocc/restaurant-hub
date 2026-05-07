@@ -35,8 +35,8 @@ public class MenuItem {
 
     public enum Categoria {
         ANTIPASTO, PRIMO, SECONDO, CONTORNO, DESSERT,
-        VINO_ROSSO, VINO_BIANCO, VINO_ROSE, COCKTAIL, BIBITA, ACQUA
-    }
+        VINO_ROSSO, VINO_BIANCO, VINO_ROSE, COCKTAIL, BIBITA, ACQUA, PIZZA
+    } 
 
     // Getters & Setters
     public Long getId() { return id; }
