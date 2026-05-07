@@ -25,7 +25,7 @@ const ALL_NAV_ITEMS: { path: string; label: string; icon: React.ElementType; pro
   { path: '/prenotazioni', label: 'Prenotazioni', icon: Calendar,        profili: ['admin'] },
   { path: '/abbinamenti',  label: 'Abbinamenti',  icon: Wine,            profili: ['admin'] },
   { path: '/cucina',       label: 'Cucina',       icon: ChefHat,         profili: ['admin', 'cuoco'] },
-  { path: '/bar',          label: 'Bar',          icon: GlassWater,      profili: ['admin', 'barista'] },
+  { path: '/bar',          label: 'Bar',          icon: GlassWater,      profili: ['admin', 'barista', 'cameriere'] },
   { path: '/pizzeria',     label: 'Pizzeria',     icon: Pizza,           profili: ['admin', 'pizzaiolo'] },
   { path: '/sala',         label: 'Sala',         icon: Utensils,        profili: ['admin', 'cameriere'] },
   { path: '/profilo',      label: 'Profilo',      icon: Settings,        profili: ['admin'] },
