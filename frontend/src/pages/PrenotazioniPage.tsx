@@ -62,7 +62,7 @@ export default function PrenotazioniPage() {
 
   const load = () => {
     if (!ristorante) return;
-    getPrenotazioni(ristorante.id)
+    getPrenotazioni()
       .then((data) => {
         const arr = Array.isArray(data) ? data : [];
         setPrenotazioni(arr.sort((a, b) => a.dataOra.localeCompare(b.dataOra)));

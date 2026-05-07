@@ -86,7 +86,7 @@ export default function OrdiniPage() {
 
   const load = () => {
     if (!ristorante) return;
-    Promise.all([getOrdini(ristorante.id), getMenu(ristorante.id)])
+    Promise.all([getOrdini(), getMenu(ristorante.id)])
       .then(([o, m]) => {
         const ordiniArr = (Array.isArray(o) ? o : []).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
         const menuArr = Array.isArray(m) ? m : [];

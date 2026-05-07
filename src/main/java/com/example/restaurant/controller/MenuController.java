@@ -2,6 +2,7 @@ package com.example.restaurant.controller;
 
 import com.example.restaurant.model.MenuItem;
 import com.example.restaurant.repository.MenuItemRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,7 +35,8 @@ public class MenuController {
     // POST /api/menu  (admin ristorante)
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public MenuItem crea(@RequestBody MenuItem menuItem) {
+    public MenuItem crea(@RequestBody MenuItem menuItem, HttpServletRequest request) {
+        menuItem.setRistoranteId((Long) request.getAttribute("ristoranteId"));
         return menuItemRepository.save(menuItem);
     }
 

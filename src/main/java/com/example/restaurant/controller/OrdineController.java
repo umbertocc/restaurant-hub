@@ -3,6 +3,7 @@ package com.example.restaurant.controller;
 import com.example.restaurant.dto.OrdineDTO;
 import com.example.restaurant.model.Ordine;
 import com.example.restaurant.service.OrdineService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -33,9 +34,10 @@ public class OrdineController {
         return ordineService.getById(id);
     }
 
-    // GET /api/ordini?ristoranteId=1  (admin)
+    // GET /api/ordini  (admin)
     @GetMapping
-    public List<Ordine> getAll(@RequestParam Long ristoranteId) {
+    public List<Ordine> getAll(HttpServletRequest request) {
+        Long ristoranteId = (Long) request.getAttribute("ristoranteId");
         return ordineService.getByRistorante(ristoranteId);
     }
 

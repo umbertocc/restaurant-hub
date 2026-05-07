@@ -3,6 +3,7 @@ package com.example.restaurant.controller;
 import com.example.restaurant.dto.PrenotazioneDTO;
 import com.example.restaurant.model.Prenotazione;
 import com.example.restaurant.service.PrenotazioneService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -20,9 +21,10 @@ public class PrenotazioneController {
         this.prenotazioneService = prenotazioneService;
     }
 
-    // GET /api/prenotazioni?ristoranteId=1
+    // GET /api/prenotazioni  (admin)
     @GetMapping
-    public List<Prenotazione> getAll(@RequestParam Long ristoranteId) {
+    public List<Prenotazione> getAll(HttpServletRequest request) {
+        Long ristoranteId = (Long) request.getAttribute("ristoranteId");
         return prenotazioneService.getByRistorante(ristoranteId);
     }
 

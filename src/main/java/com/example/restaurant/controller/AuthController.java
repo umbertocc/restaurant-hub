@@ -40,7 +40,7 @@ public class AuthController {
                     HttpStatus.UNAUTHORIZED, "Credenziali non valide");
         }
 
-        String token = jwtUtil.generateToken(email, "RISTORANTE");
+        String token = jwtUtil.generateToken(email, "RISTORANTE", ristorante.getId());
         return Map.of("token", token, "ristorante", ristorante);
     }
 }

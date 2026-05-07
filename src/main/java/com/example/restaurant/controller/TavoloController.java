@@ -2,6 +2,7 @@ package com.example.restaurant.controller;
 
 import com.example.restaurant.model.Tavolo;
 import com.example.restaurant.repository.TavoloRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,13 +19,15 @@ public class TavoloController {
     }
 
     @GetMapping
-    public List<Tavolo> getAll(@RequestParam Long ristoranteId) {
+    public List<Tavolo> getAll(HttpServletRequest request) {
+        Long ristoranteId = (Long) request.getAttribute("ristoranteId");
         return tavoloRepository.findByRistoranteId(ristoranteId);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Tavolo crea(@RequestBody Tavolo tavolo) {
+    public Tavolo crea(@RequestBody Tavolo tavolo, HttpServletRequest request) {
+        tavolo.setRistoranteId((Long) request.getAttribute("ristoranteId"));
         return tavoloRepository.save(tavolo);
     }
 

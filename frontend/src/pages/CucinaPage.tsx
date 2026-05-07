@@ -87,7 +87,7 @@ export default function CucinaPage() {
   const carica = useCallback(async (silent = false) => {
     if (!ristorante) return;
     try {
-      const data = await getOrdini(ristorante.id);
+      const data = await getOrdini();
       const attiviRaw = (Array.isArray(data) ? data : []).filter(
         (o) => o.stato === 'APERTO' || o.stato === 'IN_PREPARAZIONE'
       );
@@ -117,7 +117,7 @@ export default function CucinaPage() {
   // Prima carica silenziosa (inizializza knownIds senza beep)
   useEffect(() => {
     if (!ristorante) return;
-    getOrdini(ristorante.id)
+    getOrdini()
       .then((data) => {
         const attiviRaw = (Array.isArray(data) ? data : []).filter(
           (o) => o.stato === 'APERTO' || o.stato === 'IN_PREPARAZIONE'

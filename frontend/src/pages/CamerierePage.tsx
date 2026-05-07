@@ -87,7 +87,7 @@ export default function CamerierePage() {
   const carica = useCallback(async () => {
     if (!ristorante) return;
     try {
-      const data = await getOrdini(ristorante.id);
+      const data = await getOrdini();
       const attivi = (Array.isArray(data) ? data : []).filter(
         (o) => o.stato === 'APERTO' || o.stato === 'IN_PREPARAZIONE' || o.stato === 'SERVITO'
       );
@@ -112,7 +112,7 @@ export default function CamerierePage() {
   // Prima carica silenziosa
   useEffect(() => {
     if (!ristorante) return;
-    getOrdini(ristorante.id)
+    getOrdini()
       .then((data) => {
         const attivi = (Array.isArray(data) ? data : []).filter(
           (o) => o.stato === 'APERTO' || o.stato === 'IN_PREPARAZIONE' || o.stato === 'SERVITO'

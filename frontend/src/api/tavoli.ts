@@ -1,8 +1,8 @@
 import client from './client';
 import { Tavolo } from '../types';
 
-export const getTavoli = (ristoranteId: number) =>
-  client.get<Tavolo[]>(`/tavoli?ristoranteId=${ristoranteId}`).then((r) => r.data);
+export const getTavoli = () =>
+  client.get<Tavolo[]>('/tavoli').then((r) => r.data);
 
 export const createTavolo = (data: Partial<Tavolo>) =>
   client.post<Tavolo>('/tavoli', data).then((r) => r.data);

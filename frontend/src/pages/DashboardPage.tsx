@@ -39,7 +39,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!ristorante) return;
-    Promise.all([getOrdini(ristorante.id), getPrenotazioni(ristorante.id)])
+    Promise.all([getOrdini(), getPrenotazioni()])
       .then(([o, p]) => {
         setOrdini(Array.isArray(o) ? o : []);
         setPrenotazioni(Array.isArray(p) ? p : []);

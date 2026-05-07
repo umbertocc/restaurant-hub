@@ -19,7 +19,7 @@ export default function TavoliPage() {
 
   useEffect(() => {
     if (!ristorante) return;
-    getTavoli(ristorante.id)
+    getTavoli()
       .then(setTavoli)
       .catch(() => setError('Errore nel caricamento tavoli'))
       .finally(() => setLoading(false));

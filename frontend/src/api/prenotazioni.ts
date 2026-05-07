@@ -1,9 +1,9 @@
 import client from './client';
 import { Prenotazione, PrenotazioneDTO, StatoPrenotazione } from '../types';
 
-export const getPrenotazioni = (ristoranteId: number) =>
+export const getPrenotazioni = () =>
   client
-    .get<Prenotazione[]>('/prenotazioni', { params: { ristoranteId } })
+    .get<Prenotazione[]>('/prenotazioni')
     .then((r) => r.data);
 
 export const getPrenotazione = (id: string) =>

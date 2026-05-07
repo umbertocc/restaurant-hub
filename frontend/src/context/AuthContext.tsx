@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!ristorante) return;
     const poll = () => {
       if (document.visibilityState !== 'visible') return;
-      getOrdini(ristorante.id)
+      getOrdini()
         .then((data) => {
           const arr = Array.isArray(data) ? data : [];
           if (knownIds.current.size > 0) {
@@ -99,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .catch(() => { /* ignora errori di rete */ });
     };
     // Prima chiamata: inizializza gli ID senza notificare
-    getOrdini(ristorante.id)
+    getOrdini()
       .then((data) => { (Array.isArray(data) ? data : []).forEach((o) => knownIds.current.add(o.id)); })
       .catch(() => {});
     const interval = setInterval(poll, 8000);

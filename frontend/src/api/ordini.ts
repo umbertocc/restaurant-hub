@@ -1,8 +1,8 @@
 import client from './client';
 import { Ordine, OrdineDTO, StatoOrdine } from '../types';
 
-export const getOrdini = (ristoranteId: number) =>
-  client.get<Ordine[]>('/ordini', { params: { ristoranteId } }).then((r) => r.data);
+export const getOrdini = () =>
+  client.get<Ordine[]>('/ordini').then((r) => r.data);
 
 export const getOrdine = (id: string) =>
   client.get<Ordine>(`/ordini/${id}`).then((r) => r.data);
