@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -10,23 +10,46 @@ import {
   ChefHat,
   TableProperties,
   Utensils,
+  ShieldCheck,
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, Profilo } from '../context/AuthContext';
 
-const navItems = [
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/menu', label: 'Menu', icon: UtensilsCrossed },
-  { path: '/ordini', label: 'Ordini', icon: ShoppingCart },
-  { path: '/tavoli', label: 'Tavoli', icon: TableProperties },
-  { path: '/prenotazioni', label: 'Prenotazioni', icon: Calendar },
-  { path: '/abbinamenti', label: 'Abbinamenti', icon: Wine },
-  { path: '/cucina', label: 'Cucina', icon: ChefHat },
-  { path: '/sala', label: 'Sala', icon: Utensils },
-  { path: '/profilo', label: 'Profilo', icon: Settings },
+const ALL_NAV_ITEMS = [
+  { path: '/',             label: 'Dashboard',    icon: LayoutDashboard, profili: ['admin'] },
+  { path: '/menu',         label: 'Menu',         icon: UtensilsCrossed, profili: ['admin'] },
+  { path: '/ordini',       label: 'Ordini',       icon: ShoppingCart,    profili: ['admin', 'cameriere'] },
+  { path: '/tavoli',       label: 'Tavoli',       icon: TableProperties, profili: ['admin', 'cameriere'] },
+  { path: '/prenotazioni', label: 'Prenotazioni', icon: Calendar,        profili: ['admin'] },
+  { path: '/abbinamenti',  label: 'Abbinamenti',  icon: Wine,            profili: ['admin'] },
+  { path: '/cucina',       label: 'Cucina',       icon: ChefHat,         profili: ['admin', 'cuoco'] },
+  { path: '/sala',         label: 'Sala',         icon: Utensils,        profili: ['admin', 'cameriere'] },
+  { path: '/profilo',      label: 'Profilo',      icon: Settings,        profili: ['admin'] },
+] as const;
+
+const PROFILI: { value: Profilo; label: string; color: string; activeColor: string }[] = [
+  { value: 'admin',     label: 'Admin',     color: 'bg-gray-700 text-gray-200 hover:bg-gray-600', activeColor: 'bg-red-600 text-white' },
+  { value: 'cameriere', label: 'Cameriere', color: 'bg-gray-700 text-gray-200 hover:bg-gray-600', activeColor: 'bg-indigo-600 text-white' },
+  { value: 'cuoco',     label: 'Cuoco',     color: 'bg-gray-700 text-gray-200 hover:bg-gray-600', activeColor: 'bg-amber-600 text-white' },
 ];
 
+// Redirect di default per ogni profilo
+const PROFILO_HOME: Record<Profilo, string> = {
+  admin:     '/',
+  cameriere: '/sala',
+  cuoco:     '/cucina',
+};
+
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
-  const { ristorante, logout } = useAuth();
+  const { ristorante, logout, profilo, setProfilo } = useAuth();
+  const navigate = useNavigate();
+
+  const navItems = ALL_NAV_ITEMS.filter((item) => item.profili.includes(profilo));
+
+  const handleSetProfilo = (p: Profilo) => {
+    setProfilo(p);
+    navigate(PROFILO_HOME[p]);
+    onClose?.();
+  };
 
   return (
     <aside className="w-64 bg-gray-900 text-white flex flex-col h-full flex-shrink-0">
@@ -40,6 +63,26 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
             <p className="font-bold text-white leading-tight">Restaurant Hub</p>
             <p className="text-xs text-gray-400 truncate">{ristorante?.nome ?? 'Admin'}</p>
           </div>
+        </div>
+      </div>
+
+      {/* Selettore profilo */}
+      <div className="px-3 pt-3 pb-1">
+        <p className="text-xs text-gray-500 uppercase tracking-wider px-1 mb-1.5 flex items-center gap-1">
+          <ShieldCheck className="w-3 h-3" /> Vista
+        </p>
+        <div className="flex gap-1">
+          {PROFILI.map(({ value, label, color, activeColor }) => (
+            <button
+              key={value}
+              onClick={() => handleSetProfilo(value)}
+              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                profilo === value ? activeColor : color
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -87,3 +130,4 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
     </aside>
   );
 }
+

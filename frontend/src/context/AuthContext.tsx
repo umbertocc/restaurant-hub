@@ -11,6 +11,8 @@ import { Ristorante, LoginRequest } from '../types';
 import { login as apiLogin } from '../api/ristoranti';
 import { getOrdini } from '../api/ordini';
 
+export type Profilo = 'admin' | 'cameriere' | 'cuoco';
+
 interface AuthContextValue {
   token: string | null;
   ristorante: Ristorante | null;
@@ -20,6 +22,8 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   newOrderAlert: boolean;
   dismissOrderAlert: () => void;
+  profilo: Profilo;
+  setProfilo: (p: Profilo) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -33,8 +37,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return stored ? (JSON.parse(stored) as Ristorante) : null;
   });
   const [newOrderAlert, setNewOrderAlert] = useState(false);
+  const [profilo, setProfiloState] = useState<Profilo>(
+    () => (localStorage.getItem('rh_profilo') as Profilo) ?? 'admin'
+  );
   const knownIds = useRef<Set<string>>(new Set());
   const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const setProfilo = useCallback((p: Profilo) => {
+    localStorage.setItem('rh_profilo', p);
+    setProfiloState(p);
+  }, []);
 
   // Sblocca AudioContext al primo gesto utente (autoplay policy)
   useEffect(() => {
@@ -121,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ token, ristorante, login, logout, refreshRistorante, isAuthenticated: !!token, newOrderAlert, dismissOrderAlert }}
+      value={{ token, ristorante, login, logout, refreshRistorante, isAuthenticated: !!token, newOrderAlert, dismissOrderAlert, profilo, setProfilo }}
     >
       {children}
     </AuthContext.Provider>

@@ -73,7 +73,7 @@ export default function OrdiniPage() {
   const [ordini, setOrdini] = useState<Ordine[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<StatoOrdine | 'ALL'>('ALL');
+  const [filter, setFilter] = useState<StatoOrdine | 'ALL'>('APERTO');
   const [showModal, setShowModal] = useState(false);
 
   // New order form state
