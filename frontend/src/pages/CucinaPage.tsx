@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { ChefHat, CheckCircle, Clock, Flame, RefreshCw } from 'lucide-react';
+import { ChefHat, CheckCircle, Clock, Flame } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getOrdini, updateStatoOrdine } from '../api/ordini';
 import { CategoriaMenu, Ordine, OrdineItem, StatoOrdine } from '../types';
@@ -181,15 +181,7 @@ export default function CucinaPage() {
             <p className="text-sm text-gray-400">{ristorante?.nome}</p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => carica(false)}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-300 transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Aggiorna
-          </button>
-        </div>
+        <div className="flex items-center gap-4"></div>
       </div>
 
       {/* Contatori */}

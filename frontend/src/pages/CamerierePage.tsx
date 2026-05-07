@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { CheckCircle, Clock, Flame, RefreshCw, Utensils, Wine, Bell } from 'lucide-react';
+import { CheckCircle, Clock, Flame, Utensils, Wine, Bell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getOrdini, updateStatoOrdine } from '../api/ordini';
 import { CategoriaMenu, Ordine, OrdineItem } from '../types';
@@ -166,13 +166,7 @@ export default function CamerierePage() {
             <p className="text-sm text-gray-400">{ristorante?.nome}</p>
           </div>
         </div>
-        <button
-          onClick={carica}
-          className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-300 transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Aggiorna
-        </button>
+
       </div>
 
       {/* Contatori */}
