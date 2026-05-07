@@ -6,7 +6,7 @@ import { MenuItem, CategoriaMenu } from '../types';
 
 const CATEGORIE: CategoriaMenu[] = [
   'ANTIPASTO', 'PRIMO', 'SECONDO', 'CONTORNO', 'DESSERT',
-  'VINO_ROSSO', 'VINO_BIANCO', 'VINO_ROSE', 'COCKTAIL', 'BIBITA', 'ACQUA',
+  'VINO_ROSSO', 'VINO_BIANCO', 'VINO_ROSE', 'COCKTAIL', 'BIBITA', 'ACQUA', 'PIZZA',
 ];
 
 const CATEGORIA_LABEL: Record<CategoriaMenu, string> = {
@@ -14,6 +14,7 @@ const CATEGORIA_LABEL: Record<CategoriaMenu, string> = {
   CONTORNO: 'Contorno', DESSERT: 'Dessert',
   VINO_ROSSO: 'Vino Rosso', VINO_BIANCO: 'Vino Bianco', VINO_ROSE: 'Vino Rosé',
   COCKTAIL: 'Cocktail', BIBITA: 'Bibita', ACQUA: 'Acqua',
+  PIZZA: 'Pizza',
 };
 
 type ModalMode = 'add' | 'edit' | null;

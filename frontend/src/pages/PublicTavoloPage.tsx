@@ -26,6 +26,7 @@ const CATEGORIA_LABELS: Record<CategoriaMenu, string> = {
   COCKTAIL: 'Cocktail',
   BIBITA: 'Bibite',
   ACQUA: 'Acqua',
+  PIZZA: 'Pizze',
 };
 
 export default function PublicTavoloPage() {
