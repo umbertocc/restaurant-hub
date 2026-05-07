@@ -4,9 +4,24 @@ import { it } from 'date-fns/locale';
 import { ChefHat, CheckCircle, Clock, Flame, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getOrdini, updateStatoOrdine } from '../api/ordini';
-import { Ordine, StatoOrdine } from '../types';
+import { CategoriaMenu, Ordine, OrdineItem, StatoOrdine } from '../types';
 
 const POLL_INTERVAL = 8000;
+
+const CATEGORIE_BEVANDE = new Set<CategoriaMenu>([
+  'VINO_ROSSO', 'VINO_BIANCO', 'VINO_ROSE', 'COCKTAIL', 'BIBITA', 'ACQUA',
+]);
+
+function isBevanda(item: OrdineItem): boolean {
+  return !!item.categoria && CATEGORIE_BEVANDE.has(item.categoria);
+}
+
+/** Filtra gli items escludendo le bevande. Restituisce null se non rimane nulla. */
+function filtraItemsCucina(ordine: Ordine): Ordine | null {
+  const itemsCucina = ordine.items.filter((i) => !isBevanda(i));
+  if (itemsCucina.length === 0) return null;
+  return { ...ordine, items: itemsCucina };
+}
 
 function safeFormat(iso: string): string {
   try { return format(parseISO(iso), "HH:mm", { locale: it }); }
@@ -73,9 +88,11 @@ export default function CucinaPage() {
     if (!ristorante) return;
     try {
       const data = await getOrdini(ristorante.id);
-      const attivi = (Array.isArray(data) ? data : []).filter(
+      const attiviRaw = (Array.isArray(data) ? data : []).filter(
         (o) => o.stato === 'APERTO' || o.stato === 'IN_PREPARAZIONE'
       );
+      // Esclude ordini composti solo da bevande
+      const attivi = attiviRaw.map(filtraItemsCucina).filter(Boolean) as Ordine[];
 
       // Rileva nuovi ordini
       if (knownIds.current.size > 0 && !silent) {
@@ -102,9 +119,10 @@ export default function CucinaPage() {
     if (!ristorante) return;
     getOrdini(ristorante.id)
       .then((data) => {
-        const attivi = (Array.isArray(data) ? data : []).filter(
+        const attiviRaw = (Array.isArray(data) ? data : []).filter(
           (o) => o.stato === 'APERTO' || o.stato === 'IN_PREPARAZIONE'
         );
+        const attivi = attiviRaw.map(filtraItemsCucina).filter(Boolean) as Ordine[];
         attivi.forEach((o) => knownIds.current.add(o.id));
         attivi.sort((a, b) => {
           if (a.stato === 'APERTO' && b.stato !== 'APERTO') return -1;

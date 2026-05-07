@@ -71,6 +71,8 @@ CREATE TABLE IF NOT EXISTS restaurant.ordine_items (
     prezzo_unitario NUMERIC(10, 2) NOT NULL,
     note            TEXT
 );
+ALTER TABLE restaurant.ordine_items ADD COLUMN IF NOT EXISTS nome_menu_item VARCHAR(255);
+ALTER TABLE restaurant.ordine_items ADD COLUMN IF NOT EXISTS categoria VARCHAR(50);
 
 CREATE TABLE IF NOT EXISTS restaurant.abbinamenti (
     id                  BIGSERIAL PRIMARY KEY,

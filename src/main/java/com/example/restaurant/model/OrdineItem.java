@@ -32,6 +32,9 @@ public class OrdineItem {
     @Column(name = "nome_menu_item")
     private String nomeMenuItem;
 
+    @Column(name = "categoria")
+    private String categoria;
+
     // Getters & Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -53,6 +56,9 @@ public class OrdineItem {
 
     public String getNomeMenuItem() { return nomeMenuItem; }
     public void setNomeMenuItem(String nomeMenuItem) { this.nomeMenuItem = nomeMenuItem; }
+
+    public String getCategoria() { return categoria; }
+    public void setCategoria(String categoria) { this.categoria = categoria; }
 
     public BigDecimal getSubtotale() {
         return prezzoUnitario.multiply(BigDecimal.valueOf(quantita));

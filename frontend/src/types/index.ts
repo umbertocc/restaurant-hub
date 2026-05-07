@@ -62,6 +62,7 @@ export interface OrdineItem {
   id: string;
   menuItemId: number;
   nomeMenuItem?: string;
+  categoria?: CategoriaMenu;
   quantita: number;
   prezzoUnitario: number;
   note?: string;
