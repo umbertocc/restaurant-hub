@@ -36,7 +36,8 @@ export type CategoriaMenu =
   | 'VINO_ROSE'
   | 'COCKTAIL'
   | 'BIBITA'
-  | 'ACQUA';
+  | 'ACQUA'
+  | 'PIZZA';
 
 export interface MenuItem {
   id: number;

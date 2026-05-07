@@ -11,7 +11,7 @@ import { Ristorante, LoginRequest } from '../types';
 import { login as apiLogin } from '../api/ristoranti';
 import { getOrdini } from '../api/ordini';
 
-export type Profilo = 'admin' | 'cameriere' | 'cuoco';
+export type Profilo = 'admin' | 'cameriere' | 'cuoco' | 'barista' | 'pizzaiolo';
 
 interface AuthContextValue {
   token: string | null;

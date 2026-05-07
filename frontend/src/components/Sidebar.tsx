@@ -12,6 +12,8 @@ import {
   TableProperties,
   Utensils,
   ShieldCheck,
+  GlassWater,
+  Pizza,
 } from 'lucide-react';
 import { useAuth, Profilo } from '../context/AuthContext';
 
@@ -23,6 +25,8 @@ const ALL_NAV_ITEMS: { path: string; label: string; icon: React.ElementType; pro
   { path: '/prenotazioni', label: 'Prenotazioni', icon: Calendar,        profili: ['admin'] },
   { path: '/abbinamenti',  label: 'Abbinamenti',  icon: Wine,            profili: ['admin'] },
   { path: '/cucina',       label: 'Cucina',       icon: ChefHat,         profili: ['admin', 'cuoco'] },
+  { path: '/bar',          label: 'Bar',          icon: GlassWater,      profili: ['admin', 'barista'] },
+  { path: '/pizzeria',     label: 'Pizzeria',     icon: Pizza,           profili: ['admin', 'pizzaiolo'] },
   { path: '/sala',         label: 'Sala',         icon: Utensils,        profili: ['admin', 'cameriere'] },
   { path: '/profilo',      label: 'Profilo',      icon: Settings,        profili: ['admin'] },
 ];
@@ -31,6 +35,8 @@ const PROFILI: { value: Profilo; label: string; color: string; activeColor: stri
   { value: 'admin',     label: 'Admin',     color: 'bg-gray-700 text-gray-200 hover:bg-gray-600', activeColor: 'bg-red-600 text-white' },
   { value: 'cameriere', label: 'Cameriere', color: 'bg-gray-700 text-gray-200 hover:bg-gray-600', activeColor: 'bg-indigo-600 text-white' },
   { value: 'cuoco',     label: 'Cuoco',     color: 'bg-gray-700 text-gray-200 hover:bg-gray-600', activeColor: 'bg-amber-600 text-white' },
+  { value: 'barista',   label: 'Barista',   color: 'bg-gray-700 text-gray-200 hover:bg-gray-600', activeColor: 'bg-blue-600 text-white' },
+  { value: 'pizzaiolo', label: 'Pizzaiolo', color: 'bg-gray-700 text-gray-200 hover:bg-gray-600', activeColor: 'bg-amber-600 text-white' },
 ];
 
 // Redirect di default per ogni profilo
@@ -38,6 +44,8 @@ const PROFILO_HOME: Record<Profilo, string> = {
   admin:     '/',
   cameriere: '/sala',
   cuoco:     '/cucina',
+  barista:   '/bar',
+  pizzaiolo: '/pizzeria',
 };
 
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
