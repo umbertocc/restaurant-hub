@@ -13,6 +13,7 @@ import PrenotazioniPage from './pages/PrenotazioniPage';
 import AbbinamentiPage from './pages/AbbinamentiPage';
 import ProfiloPage from './pages/ProfiloPage';
 import TavoliPage from './pages/TavoliPage';
+import CucinaPage from './pages/CucinaPage';
 import PublicPrenotazionePage from './pages/PublicPrenotazionePage';
 import PublicTavoloPage from './pages/PublicTavoloPage';
 
@@ -43,6 +44,7 @@ export default function App() {
             <Route path="tavoli" element={<TavoliPage />} />
             <Route path="prenotazioni" element={<PrenotazioniPage />} />
             <Route path="abbinamenti" element={<AbbinamentiPage />} />
+            <Route path="cucina" element={<CucinaPage />} />
             <Route path="profilo" element={<ProfiloPage />} />
           </Route>
 

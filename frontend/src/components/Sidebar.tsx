@@ -19,6 +19,7 @@ const navItems = [
   { path: '/tavoli', label: 'Tavoli', icon: TableProperties },
   { path: '/prenotazioni', label: 'Prenotazioni', icon: Calendar },
   { path: '/abbinamenti', label: 'Abbinamenti', icon: Wine },
+  { path: '/cucina', label: 'Cucina', icon: ChefHat },
   { path: '/profilo', label: 'Profilo', icon: Settings },
 ];
 
