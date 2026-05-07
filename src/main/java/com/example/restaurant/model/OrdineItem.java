@@ -29,7 +29,7 @@ public class OrdineItem {
 
     private String note;
 
-    @Transient
+    @Column(name = "nome_menu_item")
     private String nomeMenuItem;
 
     // Getters & Setters
