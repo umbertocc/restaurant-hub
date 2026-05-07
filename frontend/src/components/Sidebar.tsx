@@ -80,14 +80,15 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         <p className="text-xs text-gray-500 uppercase tracking-wider px-1 mb-1.5 flex items-center gap-1">
           <ShieldCheck className="w-3 h-3" /> Vista
         </p>
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-2">
           {PROFILI.map(({ value, label, color, activeColor }) => (
             <button
               key={value}
               onClick={() => handleSetProfilo(value)}
-              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+              className={`py-1 px-2 rounded-lg text-[11px] font-semibold transition-colors ${
                 profilo === value ? activeColor : color
               }`}
+              style={{ minWidth: 70, marginBottom: 4 }}
             >
               {label}
             </button>
