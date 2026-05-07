@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
+import React from 'react';
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -14,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth, Profilo } from '../context/AuthContext';
 
-const ALL_NAV_ITEMS = [
+const ALL_NAV_ITEMS: { path: string; label: string; icon: React.ElementType; profili: Profilo[] }[] = [
   { path: '/',             label: 'Dashboard',    icon: LayoutDashboard, profili: ['admin'] },
   { path: '/menu',         label: 'Menu',         icon: UtensilsCrossed, profili: ['admin'] },
   { path: '/ordini',       label: 'Ordini',       icon: ShoppingCart,    profili: ['admin', 'cameriere'] },
@@ -24,7 +25,7 @@ const ALL_NAV_ITEMS = [
   { path: '/cucina',       label: 'Cucina',       icon: ChefHat,         profili: ['admin', 'cuoco'] },
   { path: '/sala',         label: 'Sala',         icon: Utensils,        profili: ['admin', 'cameriere'] },
   { path: '/profilo',      label: 'Profilo',      icon: Settings,        profili: ['admin'] },
-] as const;
+];
 
 const PROFILI: { value: Profilo; label: string; color: string; activeColor: string }[] = [
   { value: 'admin',     label: 'Admin',     color: 'bg-gray-700 text-gray-200 hover:bg-gray-600', activeColor: 'bg-red-600 text-white' },
