@@ -9,6 +9,7 @@ import {
   LogOut,
   ChefHat,
   TableProperties,
+  Utensils,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -20,6 +21,7 @@ const navItems = [
   { path: '/prenotazioni', label: 'Prenotazioni', icon: Calendar },
   { path: '/abbinamenti', label: 'Abbinamenti', icon: Wine },
   { path: '/cucina', label: 'Cucina', icon: ChefHat },
+  { path: '/sala', label: 'Sala', icon: Utensils },
   { path: '/profilo', label: 'Profilo', icon: Settings },
 ];
 
