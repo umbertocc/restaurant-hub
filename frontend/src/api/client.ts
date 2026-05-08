@@ -17,9 +17,13 @@ client.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('rh_token');
-      localStorage.removeItem('rh_ristorante');
-      window.location.href = '/login';
+      // Logout solo se presente header WWW-Authenticate (problemi di autenticazione/token)
+      const wwwAuth = error.response.headers?.['www-authenticate'];
+      if (wwwAuth) {
+        localStorage.removeItem('rh_token');
+        localStorage.removeItem('rh_ristorante');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   },

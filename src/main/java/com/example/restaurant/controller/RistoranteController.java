@@ -60,6 +60,10 @@ public class RistoranteController {
             throw new org.springframework.web.server.ResponseStatusException(
                     HttpStatus.CONFLICT, "Email già registrata");
         }
+        if (ristorante.getPasswordHash() == null || ristorante.getPasswordHash().length() < 8) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "La password deve essere lunga almeno 8 caratteri");
+        }
         if (ristorante.getPasswordHash() != null && !ristorante.getPasswordHash().isBlank()) {
             ristorante.setPasswordHash(passwordEncoder.encode(ristorante.getPasswordHash()));
         }

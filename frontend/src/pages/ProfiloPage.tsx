@@ -1,16 +1,25 @@
 import { useState, useEffect, FormEvent } from 'react';
-import { Save, Store, Download, QrCode } from 'lucide-react';
+import { Save, Store, Download, QrCode, Key } from 'lucide-react';
+import { changePassword } from '../api/changePassword';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext';
 import { updateRistorante } from '../api/ristoranti';
 import { Ristorante } from '../types';
 
 export default function ProfiloPage() {
-  const { ristorante, refreshRistorante } = useAuth();
+  const { ristorante, refreshRistorante, logout } = useAuth();
   const [form, setForm] = useState<Partial<Ristorante>>({});
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+
+  // Stato per cambio password
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   useEffect(() => {
     if (ristorante) {
@@ -63,6 +72,97 @@ export default function ProfiloPage() {
           <h1 className="page-title">Profilo ristorante</h1>
           <p className="text-sm text-gray-500">Piano: <strong>{ristorante.piano}</strong></p>
         </div>
+      </div>
+
+      {/* Cambio password */}
+      <div className="card bg-gray-50 border border-dashed border-gray-300">
+        <div className="flex items-center gap-2 mb-2">
+          <Key className="w-5 h-5 text-red-600" />
+          <h3 className="font-semibold text-gray-700">Cambio password</h3>
+        </div>
+        {!showPasswordForm ? (
+          <button className="btn-secondary text-sm" onClick={() => setShowPasswordForm(true)}>
+            Cambia password
+          </button>
+        ) : (
+          <form
+            className="space-y-3"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setPasswordError('');
+              setPasswordSuccess('');
+              setPasswordLoading(true);
+              try {
+                await changePassword({ oldPassword, newPassword });
+                setPasswordSuccess('Password cambiata con successo!');
+                setOldPassword('');
+                setNewPassword('');
+                setShowPasswordForm(false);
+                setTimeout(() => {
+                  setPasswordSuccess('');
+                  logout();
+                }, 2000);
+              } catch (err: any) {
+                // Mostra sempre il messaggio del backend, anche per 401/403
+                const backendMsg = err?.response?.data?.message || err?.response?.data?.error;
+                if (backendMsg) {
+                  setPasswordError(backendMsg);
+                } else if (err?.message) {
+                  setPasswordError(err.message);
+                } else {
+                  setPasswordError('Errore durante il cambio password.');
+                }
+              } finally {
+                setPasswordLoading(false);
+              }
+            }}
+          >
+            <div>
+              <label className="label">Vecchia password</label>
+              <input
+                type="password"
+                className="input"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="label">Nuova password</label>
+              <input
+                type="password"
+                className="input"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                minLength={8}
+                required
+              />
+            </div>
+            {passwordError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-2 text-sm text-red-700">{passwordError}</div>
+            )}
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => {
+                  setShowPasswordForm(false);
+                  setOldPassword('');
+                  setNewPassword('');
+                  setPasswordError('');
+                }}
+              >
+                Annulla
+              </button>
+              <button type="submit" className="btn-primary" disabled={passwordLoading}>
+                {passwordLoading ? 'Salvataggio…' : 'Salva'}
+              </button>
+            </div>
+          </form>
+        )}
+        {passwordSuccess && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-sm text-green-700 mt-2">{passwordSuccess}</div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="card space-y-5">
