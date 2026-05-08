@@ -20,6 +20,22 @@ public class NotificaService {
     }
 
     @Async
+    public void notificaResetPassword(Ristorante ristorante, String token) {
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setFrom(mittente);
+        msg.setTo(ristorante.getEmail());
+        msg.setSubject("Reset password Restaurant Hub");
+        String resetUrl = "https://restaurant-hub/reset-password?token=" + token;
+        msg.setText(
+            "Hai richiesto il reset della password.\n" +
+            "Clicca sul link seguente per impostare una nuova password (valido 30 minuti):\n" +
+            resetUrl + "\n\n" +
+            "Se non hai richiesto tu questa operazione, ignora questa email."
+        );
+        mailSender.send(msg);
+    }
+
+    @Async
     public void notificaNuovaRegistrazione(Ristorante ristorante) {
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setFrom(mittente);

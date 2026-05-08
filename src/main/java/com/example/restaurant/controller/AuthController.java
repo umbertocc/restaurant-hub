@@ -3,8 +3,14 @@ package com.example.restaurant.controller;
 import com.example.restaurant.model.Ristorante;
 import com.example.restaurant.repository.RistoranteRepository;
 import com.example.restaurant.util.JwtUtil;
+import com.example.restaurant.model.PasswordResetToken;
+import com.example.restaurant.repository.PasswordResetTokenRepository;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 import com.example.restaurant.dto.ChangePasswordRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
+import com.example.restaurant.service.NotificaService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,14 +23,67 @@ public class AuthController {
     private final RistoranteRepository ristoranteRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final NotificaService notificaService;
+
+
 
     public AuthController(RistoranteRepository ristoranteRepository,
                           PasswordEncoder passwordEncoder,
-                          JwtUtil jwtUtil) {
+                          JwtUtil jwtUtil,
+                          PasswordResetTokenRepository passwordResetTokenRepository,
+                          NotificaService notificaService) {
         this.ristoranteRepository = ristoranteRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.notificaService = notificaService;
     }
+       
+       
+       
+       
+        @PostMapping("/forgot-password")
+        @Transactional
+        public Map<String, String> forgotPassword(@RequestBody Map<String, String> body) {
+            String email = body.get("email");
+            if (email == null || email.isBlank()) {
+                throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST, "Email obbligatoria");
+            }
+            Ristorante ristorante = ristoranteRepository.findByEmail(email)
+                .orElse(null);
+            // Risposta sempre generica per sicurezza
+            if (ristorante != null) {
+                // Invalida eventuali token precedenti
+                passwordResetTokenRepository.deleteByRistorante(ristorante);
+                String token = UUID.randomUUID().toString();
+                OffsetDateTime expiry = OffsetDateTime.now().plusMinutes(30);
+                PasswordResetToken resetToken = new PasswordResetToken(token, ristorante, expiry);
+                passwordResetTokenRepository.save(resetToken);
+                notificaService.notificaResetPassword(ristorante, token);
+            }
+            return Map.of("message", "Se l'email esiste riceverai istruzioni per il reset.");
+        }
+
+        @PostMapping("/reset-password")
+        public Map<String, String> resetPassword(@RequestBody Map<String, String> body) {
+            String token = body.get("token");
+            String newPassword = body.get("newPassword");
+            if (token == null || newPassword == null || newPassword.length() < 8) {
+                throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST, "Token o nuova password non validi");
+            }
+            PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                    .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST, "Token non valido"));
+            if (resetToken.getExpiryDate().isBefore(OffsetDateTime.now())) {
+                throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST, "Token scaduto");
+            }
+            Ristorante ristorante = resetToken.getRistorante();
+            ristorante.setPasswordHash(passwordEncoder.encode(newPassword));
+            ristoranteRepository.save(ristorante);
+            passwordResetTokenRepository.delete(resetToken);
+            return Map.of("message", "Password aggiornata con successo");
+        }
+    
 
     @PostMapping("/login")
     public Map<String, Object> login(@RequestBody Map<String, String> body) {
@@ -73,3 +132,4 @@ public class AuthController {
         return Map.of("message", "Password cambiata con successo");
         }
 }
+

@@ -97,7 +97,13 @@ export default function LoginPage() {
             <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-base">
               {loading ? 'Accesso in corso…' : 'Accedi'}
             </button>
+
           </form>
+          <div className="text-right mt-2">
+            <Link to="/forgot-password" className="text-sm text-red-600 hover:underline">
+              Password dimenticata?
+            </Link>
+          </div>
 
           <p className="text-center text-sm text-gray-500 mt-5">
             Nuovo ristorante?{' '}
