@@ -102,7 +102,7 @@ public class AuthController {
 
         String token = jwtUtil.generateToken(email, "RISTORANTE", ristorante.getId());
         return Map.of("token", token, "ristorante", ristorante);
-    }
+    } 
 
         @PostMapping("/change-password")
         public Map<String, String> changePassword(@RequestBody ChangePasswordRequest request, @RequestHeader("Authorization") String authHeader) {

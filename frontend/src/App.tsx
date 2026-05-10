@@ -14,7 +14,7 @@ import AbbinamentiPage from './pages/AbbinamentiPage';
 import ProfiloPage from './pages/ProfiloPage';
 import TavoliPage from './pages/TavoliPage';
 import CucinaPage from './pages/CucinaPage';
-import CamerierePage from './pages/CamerierePage';
+import CamerierePage from './pages/CamerierePage'; 
 import BarPage from './pages/BarPage';
 import PizzeriaPage from './pages/PizzeriaPage';
 import PublicPrenotazionePage from './pages/PublicPrenotazionePage';
