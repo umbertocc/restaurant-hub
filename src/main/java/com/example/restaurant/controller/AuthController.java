@@ -92,14 +92,20 @@ public class AuthController {
         String email = body.get("email");
         String password = body.get("password");
 
+
         Ristorante ristorante = ristoranteRepository.findByEmail(email)
-                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
-                        HttpStatus.UNAUTHORIZED, "Credenziali non valide"));
+            .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                HttpStatus.UNAUTHORIZED, "Credenziali non valide"));
+
+        if (!Boolean.TRUE.equals(ristorante.getAttivo())) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                HttpStatus.FORBIDDEN, "Account in attesa di approvazione");
+        }
 
         if (ristorante.getPasswordHash() == null ||
-                !passwordEncoder.matches(password, ristorante.getPasswordHash())) {
+            !passwordEncoder.matches(password, ristorante.getPasswordHash())) {
             throw new org.springframework.web.server.ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED, "Credenziali non valide");
+                HttpStatus.UNAUTHORIZED, "Credenziali non valide");
         }
 
         String token = jwtUtil.generateToken(email, "RISTORANTE", ristorante.getId());
