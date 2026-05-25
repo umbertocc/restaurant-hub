@@ -14,7 +14,7 @@ export default function RegisterPage() {
     citta: '',
   });
   const [showPwd, setShowPwd] = useState(false);
-  const [registrationCode, setRegistrationCode] = useState('');
+  // Rimosso registrationCode: non più richiesto
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -27,7 +27,7 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      await registerRistorante(form, registrationCode);
+      await registerRistorante(form); // Non serve più il codice
       setSuccess(true);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } }).response?.data?.message;
@@ -146,19 +146,7 @@ export default function RegisterPage() {
                 onChange={(e) => set('indirizzo', e.target.value)}
               />
             </div>
-            <div>
-              <label className="label">Codice di registrazione *</label>
-              <div className="relative">
-                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  className="input pl-9"
-                  placeholder="Inserisci il codice fornito dall'amministratore"
-                  value={registrationCode}
-                  onChange={(e) => setRegistrationCode(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
+            {/* Campo codice di registrazione rimosso */}
 
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
