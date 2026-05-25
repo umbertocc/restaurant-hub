@@ -6,6 +6,9 @@ import com.example.restaurant.service.NotificaService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.example.restaurant.repository.RistoranteRuoloRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,15 +20,18 @@ public class RistoranteController {
     private final RistoranteRepository ristoranteRepository;
     private final PasswordEncoder passwordEncoder;
     private final NotificaService notificaService;
+    private final RistoranteRuoloRepository ristoranteRuoloRepository;
 
     // Rimosso registrationCode: non più richiesto
 
     public RistoranteController(RistoranteRepository ristoranteRepository,
                                 PasswordEncoder passwordEncoder,
-                                NotificaService notificaService) {
+                                NotificaService notificaService,
+                                RistoranteRuoloRepository ristoranteRuoloRepository) {
         this.ristoranteRepository = ristoranteRepository;
         this.passwordEncoder = passwordEncoder;
         this.notificaService = notificaService;
+        this.ristoranteRuoloRepository = ristoranteRuoloRepository;
     }
 
     // GET /api/ristoranti  (solo super-admin)
@@ -79,6 +85,22 @@ public class RistoranteController {
     // PATCH /api/ristoranti/{id}/approva (solo superadmin)
     @PatchMapping("/{id}/approva")
     public void approvaRistorante(@PathVariable Long id) {
+        // Recupera l'ID del ristorante autenticato dal token
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long ristoranteId = null;
+        if (principal instanceof org.springframework.security.core.userdetails.User user) {
+            try {
+                ristoranteId = Long.parseLong(user.getUsername());
+            } catch (NumberFormatException ignored) {}
+        }
+        if (ristoranteId == null) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Utente non autenticato");
+        }
+        // Controlla che l'utente abbia il ruolo superadmin
+        var ruoli = ristoranteRuoloRepository.findRuoliByRistoranteId(ristoranteId);
+        if (ruoli == null || !ruoli.contains("superadmin")) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Permesso negato: solo superadmin");
+        }
         Ristorante ristorante = ristoranteRepository.findById(id)
                 .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Ristorante non trovato"));
