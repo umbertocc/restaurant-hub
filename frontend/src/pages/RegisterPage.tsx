@@ -47,10 +47,12 @@ export default function RegisterPage() {
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">Registrazione completata!</h2>
             <p className="text-gray-500 text-sm mb-6">
-              Il ristorante <strong>{form.nome}</strong> è stato registrato. Ora puoi accedere.
+              Il ristorante <strong>{form.nome}</strong> è stato registrato.<br />
+              Un superadmin dovrà approvare il tuo account prima che tu possa accedere.<br />
+              Riceverai una notifica via email quando l&apos;account sarà attivo.
             </p>
             <button onClick={() => navigate('/login')} className="btn-primary w-full py-3">
-              Vai al Login
+              Torna al Login
             </button>
           </div>
         </div>
