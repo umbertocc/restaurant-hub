@@ -19,17 +19,19 @@ export default function LoginPage() {
     try {
       await login({ email, password });
       navigate('/');
-    } catch (err: unknown) {
-      const status = (err as { response?: { status?: number } }).response?.status;
+    } catch (err: any) {
+      const status = err?.response?.status;
       if (status === 404) {
         setError(
-          "L'endpoint /api/auth/login non è ancora implementato nel backend. Implementa AuthController per abilitare il login.",
+          "L'endpoint /api/auth/login non è ancora implementato nel backend. Implementa AuthController per abilitare il login."
         );
       } else if (status === 401) {
         setError('Email o password non corretti.');
+      } else if (status === 403) {
+        setError(err.customMessage || 'Accesso non autorizzato.');
       } else {
         setError(
-          'Impossibile connettersi al server. Verifica che il backend sia avviato su localhost:8080.',
+          'Impossibile connettersi al server. Verifica che il backend sia avviato su localhost:8080.'
         );
       }
     } finally {

@@ -25,6 +25,11 @@ client.interceptors.response.use(
         window.location.href = '/login';
       }
     }
+    if (error.response?.status === 403) {
+      // Propaga il messaggio del backend, se presente
+      const backendMsg = error.response.data?.message || 'Accesso non autorizzato.';
+      error.customMessage = backendMsg;
+    }
     return Promise.reject(error);
   },
 );
