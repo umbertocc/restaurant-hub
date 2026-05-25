@@ -85,17 +85,18 @@ public class RistoranteController {
     // PATCH /api/ristoranti/{id}/approva (solo superadmin)
     @PatchMapping("/{id}/approva")
     public void approvaRistorante(@PathVariable Long id) {
-        // Recupera l'ID del ristorante autenticato dal token
+        // Recupera l'email dal principal
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long ristoranteId = null;
+        String email = null;
         if (principal instanceof org.springframework.security.core.userdetails.User user) {
-            try {
-                ristoranteId = Long.parseLong(user.getUsername());
-            } catch (NumberFormatException ignored) {}
+            email = user.getUsername();
         }
-        if (ristoranteId == null) {
+        if (email == null) {
             throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Utente non autenticato");
         }
+        Ristorante ristoratore = ristoranteRepository.findByEmail(email)
+            .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Utente non trovato"));
+        Long ristoranteId = ristoratore.getId();
         // Controlla che l'utente abbia il ruolo superadmin
         var ruoli = ristoranteRuoloRepository.findRuoliByRistoranteId(ristoranteId);
         if (ruoli == null || !ruoli.contains("superadmin")) {
