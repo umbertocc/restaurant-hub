@@ -52,7 +52,9 @@ public class NotificaService {
             "Email:     " + ristorante.getEmail() + "\n" +
             "Telefono:  " + (ristorante.getTelefono() != null ? ristorante.getTelefono() : "-") + "\n" +
             "Città:     " + (ristorante.getCitta() != null ? ristorante.getCitta() : "-") + "\n" +
-            "Indirizzo: " + (ristorante.getIndirizzo() != null ? ristorante.getIndirizzo() : "-") + "\n"
+            "Indirizzo: " + (ristorante.getIndirizzo() != null ? ristorante.getIndirizzo() : "-") + "\n\n" +
+            "Lo stato del ristorante è: IN ATTESA DI APPROVAZIONE da parte di un superadmin.\n" +
+            "L'account non potrà accedere finché non verrà approvato."
         );
         try {
             mailSender.send(msg);
