@@ -87,11 +87,7 @@ public class RistoranteController {
     public void approvaRistorante(@PathVariable Long id) {
         // Recupera l'email dal principal
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String email = null;
-        if (principal instanceof org.springframework.security.core.userdetails.User user) {
-            email = user.getUsername();
-        }
-        if (email == null) {
+        if (!(principal instanceof String email)) {
             throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Utente non autenticato");
         }
         Ristorante ristoratore = ristoranteRepository.findByEmail(email)
