@@ -53,6 +53,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const navigate = useNavigate();
 
   const navItems = ALL_NAV_ITEMS.filter((item) => item.profili.includes(profilo));
+  const isSuperadmin = Array.isArray(ristorante?.ruoli) && ristorante.ruoli.includes('superadmin');
 
   const handleSetProfilo = (p: Profilo) => {
     setProfilo(p);
@@ -116,6 +117,23 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
             {label}
           </NavLink>
         ))}
+        {/* Superadmin section */}
+        {isSuperadmin && (
+          <NavLink
+            to="/admin"
+            onClick={onClose}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                isActive
+                  ? 'bg-red-600 text-white'
+                  : 'text-yellow-400 hover:bg-gray-800 hover:text-white'
+              }`
+            }
+          >
+            <ShieldCheck className="w-5 h-5 flex-shrink-0" />
+            Superadmin
+          </NavLink>
+        )}
       </nav>
 
       {/* User + Logout */}
