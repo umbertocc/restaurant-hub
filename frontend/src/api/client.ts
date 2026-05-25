@@ -27,7 +27,7 @@ client.interceptors.response.use(
     }
     if (error.response?.status === 403) {
       // Propaga il messaggio del backend, se presente
-      const backendMsg = error.response.data?.message || 'Accesso non autorizzato.';
+      const backendMsg = error.response.data?.message || error.response.data?.error || 'Accesso non autorizzato.';
       error.customMessage = backendMsg;
     }
     return Promise.reject(error);
