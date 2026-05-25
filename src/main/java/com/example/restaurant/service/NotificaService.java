@@ -43,7 +43,7 @@ public class NotificaService {
     @Async
     public void notificaNuovaRegistrazione(Ristorante ristorante) {
         SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setFrom(mittente);
+        msg.setFrom("info@torrepalivacanze.it");
         msg.setTo("info@torrepalivacanze.it");
         msg.setSubject("Nuovo ristorante registrato: " + ristorante.getNome());
         msg.setText(
