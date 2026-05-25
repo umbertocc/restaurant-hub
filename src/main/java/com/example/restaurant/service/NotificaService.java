@@ -1,6 +1,9 @@
+
 package com.example.restaurant.service;
 
 import com.example.restaurant.model.Ristorante;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -9,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class NotificaService {
+
+    private static final Logger logger = LoggerFactory.getLogger(NotificaService.class);
 
     private final JavaMailSender mailSender;
 
@@ -51,10 +56,9 @@ public class NotificaService {
         );
         try {
             mailSender.send(msg);
-            System.out.println("[EMAIL] Notifica nuova registrazione inviata con successo a info@torrepalivacanze.it");
+            logger.info("[EMAIL] Notifica nuova registrazione inviata con successo a info@torrepalivacanze.it");
         } catch (Exception e) {
-            System.err.println("[EMAIL] Errore invio notifica nuova registrazione: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("[EMAIL] Errore invio notifica nuova registrazione: {}", e.getMessage(), e);
         }
     }
 }
