@@ -38,6 +38,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/ristoranti").permitAll()
                 // Login
                 .requestMatchers("/api/auth/**").permitAll()
+                // PATCH approvazione ristorante: autenticazione obbligatoria
+                .requestMatchers(HttpMethod.PATCH, "/api/ristoranti/*/approva").authenticated()
                 // Tutto il resto richiede autenticazione
                 .anyRequest().authenticated()
             )
