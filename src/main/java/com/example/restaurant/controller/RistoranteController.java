@@ -76,4 +76,13 @@ public class RistoranteController {
         existing.setLogoUrl(aggiornato.getLogoUrl());
         return ristoranteRepository.save(existing);
     }
+    // PATCH /api/ristoranti/{id}/approva (solo superadmin)
+    @PatchMapping("/{id}/approva")
+    public void approvaRistorante(@PathVariable Long id) {
+        Ristorante ristorante = ristoranteRepository.findById(id)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Ristorante non trovato"));
+        ristorante.setAttivo(true);
+        ristoranteRepository.save(ristorante);
+    }
 }
