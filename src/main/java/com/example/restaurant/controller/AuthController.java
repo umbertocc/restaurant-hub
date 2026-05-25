@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import com.example.restaurant.repository.RistoranteRuoloRepository;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -25,19 +26,20 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final NotificaService notificaService;
-
-
+    private final RistoranteRuoloRepository ristoranteRuoloRepository;
 
     public AuthController(RistoranteRepository ristoranteRepository,
                           PasswordEncoder passwordEncoder,
                           JwtUtil jwtUtil,
                           PasswordResetTokenRepository passwordResetTokenRepository,
-                          NotificaService notificaService) {
+                          NotificaService notificaService,
+                          RistoranteRuoloRepository ristoranteRuoloRepository) {
         this.ristoranteRepository = ristoranteRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.notificaService = notificaService;
+        this.ristoranteRuoloRepository = ristoranteRuoloRepository;
     }
        
        
@@ -101,7 +103,9 @@ public class AuthController {
         }
 
         String token = jwtUtil.generateToken(email, "RISTORANTE", ristorante.getId());
-        return Map.of("token", token, "ristorante", ristorante);
+        // Recupera i ruoli associati
+        java.util.List<String> ruoli = ristoranteRuoloRepository.findRuoliByRistoranteId(ristorante.getId());
+        return Map.of("token", token, "ristorante", ristorante, "ruoli", ruoli);
     } 
 
         @PostMapping("/change-password")
