@@ -52,6 +52,8 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const { ristorante, ruoli, logout, profilo, setProfilo } = useAuth();
   const navigate = useNavigate();
 
+  console.log('Sidebar ruoli:', ruoli);
+
   const navItems = ALL_NAV_ITEMS.filter((item) => item.profili.includes(profilo));
   const isSuperadmin = Array.isArray(ruoli) && ruoli.includes('superadmin');
 
