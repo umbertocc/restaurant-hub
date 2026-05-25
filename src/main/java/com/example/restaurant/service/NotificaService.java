@@ -49,6 +49,12 @@ public class NotificaService {
             "Città:     " + (ristorante.getCitta() != null ? ristorante.getCitta() : "-") + "\n" +
             "Indirizzo: " + (ristorante.getIndirizzo() != null ? ristorante.getIndirizzo() : "-") + "\n"
         );
-        mailSender.send(msg);
+        try {
+            mailSender.send(msg);
+            System.out.println("[EMAIL] Notifica nuova registrazione inviata con successo a info@torrepalivacanze.it");
+        } catch (Exception e) {
+            System.err.println("[EMAIL] Errore invio notifica nuova registrazione: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
