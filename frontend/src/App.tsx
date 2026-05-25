@@ -1,6 +1,7 @@
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute, { SuperadminRoute } from './components/ProtectedRoute';
 import Layout from './components/Layout';
 
 import LoginPage from './pages/LoginPage';
@@ -20,7 +21,7 @@ import PizzeriaPage from './pages/PizzeriaPage';
 import PublicPrenotazionePage from './pages/PublicPrenotazionePage';
 import PublicTavoloPage from './pages/PublicTavoloPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
+import AdminRistorantiPage from './pages/AdminRistorantiPage';
 
 export default function App() {
   return (
@@ -57,6 +58,16 @@ export default function App() {
             <Route path="sala" element={<CamerierePage />} />
             <Route path="profilo" element={<ProfiloPage />} />
           </Route>
+
+          {/* Superadmin only */}
+          <Route
+            path="/admin"
+            element={
+              <SuperadminRoute>
+                <AdminRistorantiPage />
+              </SuperadminRoute>
+            }
+          />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -49,11 +49,11 @@ const PROFILO_HOME: Record<Profilo, string> = {
 };
 
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
-  const { ristorante, logout, profilo, setProfilo } = useAuth();
+  const { ristorante, ruoli, logout, profilo, setProfilo } = useAuth();
   const navigate = useNavigate();
 
   const navItems = ALL_NAV_ITEMS.filter((item) => item.profili.includes(profilo));
-  const isSuperadmin = Array.isArray(ristorante?.ruoli) && ristorante.ruoli.includes('superadmin');
+  const isSuperadmin = Array.isArray(ruoli) && ruoli.includes('superadmin');
 
   const handleSetProfilo = (p: Profilo) => {
     setProfilo(p);

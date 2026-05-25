@@ -150,4 +150,5 @@ export interface LoginRequest {
 export interface AuthResponse {
   token: string;
   ristorante: Ristorante;
+  ruoli: string[];
 }
