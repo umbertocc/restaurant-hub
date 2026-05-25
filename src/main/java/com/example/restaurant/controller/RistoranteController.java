@@ -18,8 +18,7 @@ public class RistoranteController {
     private final PasswordEncoder passwordEncoder;
     private final NotificaService notificaService;
 
-    @Value("${registration.code:}")
-    private String registrationCode;
+    // Rimosso registrationCode: non più richiesto
 
     public RistoranteController(RistoranteRepository ristoranteRepository,
                                 PasswordEncoder passwordEncoder,
@@ -46,16 +45,7 @@ public class RistoranteController {
     // POST /api/ristoranti  (registrazione nuovo ristorante)
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Ristorante registra(@RequestHeader(value = "X-Registration-Code", required = false) String code,
-                               @RequestBody Ristorante ristorante) {
-        if (registrationCode == null || registrationCode.isBlank()) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "La registrazione è disabilitata");
-        }
-        if (!registrationCode.equals(code)) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Codice di registrazione non valido");
-        }
+    public Ristorante registra(@RequestBody Ristorante ristorante) {
         if (ristoranteRepository.existsByEmail(ristorante.getEmail())) {
             throw new org.springframework.web.server.ResponseStatusException(
                     HttpStatus.CONFLICT, "Email già registrata");
@@ -67,6 +57,7 @@ public class RistoranteController {
         if (ristorante.getPasswordHash() != null && !ristorante.getPasswordHash().isBlank()) {
             ristorante.setPasswordHash(passwordEncoder.encode(ristorante.getPasswordHash()));
         }
+        ristorante.setAttivo(false); // Nuovi ristoranti in attesa di approvazione
         Ristorante salvato = ristoranteRepository.save(ristorante);
         notificaService.notificaNuovaRegistrazione(salvato);
         return salvato;
