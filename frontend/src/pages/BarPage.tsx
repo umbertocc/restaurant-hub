@@ -1,12 +1,11 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { GlassWater, CheckCircle, Clock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getOrdini, updateStatoOrdine } from '../api/ordini';
 import { CategoriaMenu, Ordine, OrdineItem, StatoOrdine } from '../types';
-
-const POLL_INTERVAL = 8000;
+import { ORDERS_CHANGED_EVENT } from '../realtime/ordersRealtime';
 
 const CATEGORIE_BEVANDE = new Set<CategoriaMenu>([
   'VINO_ROSSO', 'VINO_BIANCO', 'VINO_ROSE', 'COCKTAIL', 'BIBITA', 'ACQUA',
@@ -50,93 +49,41 @@ export default function BarPage() {
   const [ordini, setOrdini] = useState<Ordine[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const knownIds = useRef<Set<string>>(new Set());
-  const audioCtxRef = useRef<AudioContext | null>(null);
 
-  // Sblocca AudioContext al primo gesto
-  useEffect(() => {
-    const unlock = () => {
-      if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
-      audioCtxRef.current.resume();
-    };
-    window.addEventListener('click', unlock, { once: true });
-    return () => window.removeEventListener('click', unlock);
-  }, []);
-
-  const playBeep = useCallback(() => {
-    try {
-      const ctx = audioCtxRef.current;
-      if (!ctx || ctx.state !== 'running') return;
-      [0, 0.5].forEach((delay) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = 'square';
-        osc.frequency.value = 1760;
-        gain.gain.setValueAtTime(0.7, ctx.currentTime + delay);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.5);
-        osc.start(ctx.currentTime + delay);
-        osc.stop(ctx.currentTime + delay + 0.5);
-      });
-    } catch { /* ignorato */ }
-  }, []);
-
-  const carica = useCallback(async (silent = false) => {
+  const caricaOrdini = useCallback(async () => {
     if (!ristorante) return;
     try {
       const data = await getOrdini();
       const attiviRaw = (Array.isArray(data) ? data : []).filter(
         (o) => o.stato === 'APERTO' || o.stato === 'IN_PREPARAZIONE'
       );
-      // Prende solo ordini con almeno una bevanda
       const attivi = attiviRaw.map(filtraItemsBar).filter(Boolean) as Ordine[];
-      if (knownIds.current.size > 0 && !silent) {
-        const nuovi = attivi.filter((o) => !knownIds.current.has(o.id));
-        if (nuovi.length > 0) {
-          playBeep();
-          if (window.navigator.vibrate) window.navigator.vibrate(200);
-        }
-      }
-      attivi.forEach((o) => knownIds.current.add(o.id));
       attivi.sort((a, b) => {
         if (a.stato === 'APERTO' && b.stato !== 'APERTO') return -1;
         if (a.stato !== 'APERTO' && b.stato === 'APERTO') return 1;
         return a.createdAt.localeCompare(b.createdAt);
       });
       setOrdini(attivi);
-    } catch { /* ignora */ } finally {
+    } catch {
+      // ignore network errors
+    } finally {
       setLoading(false);
     }
-  }, [ristorante, playBeep]);
-
-  // Prima carica silenziosa
-  useEffect(() => {
-    if (!ristorante) return;
-    getOrdini()
-      .then((data) => {
-        const attiviRaw = (Array.isArray(data) ? data : []).filter(
-          (o) => o.stato === 'APERTO' || o.stato === 'IN_PREPARAZIONE'
-        );
-        const attivi = attiviRaw.map(filtraItemsBar).filter(Boolean) as Ordine[];
-        attivi.forEach((o) => knownIds.current.add(o.id));
-        attivi.sort((a, b) => {
-          if (a.stato === 'APERTO' && b.stato !== 'APERTO') return -1;
-          if (a.stato !== 'APERTO' && b.stato === 'APERTO') return 1;
-          return a.createdAt.localeCompare(b.createdAt);
-        });
-        setOrdini(attivi);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
   }, [ristorante]);
-
-  // Polling
+  // Prima carica
   useEffect(() => {
-    if (!ristorante) return;
-    const interval = setInterval(() => carica(false), POLL_INTERVAL);
-    return () => clearInterval(interval);
-  }, [ristorante, carica]);
+    setLoading(true);
+    caricaOrdini();
+  }, [caricaOrdini]);
+
+  useEffect(() => {
+    const onOrdersChanged = () => {
+      caricaOrdini();
+    };
+
+    window.addEventListener(ORDERS_CHANGED_EVENT, onOrdersChanged);
+    return () => window.removeEventListener(ORDERS_CHANGED_EVENT, onOrdersChanged);
+  }, [caricaOrdini]);
 
   const avanza = async (ordine: Ordine) => {
     // Flusso classico: APERTO → IN_PREPARAZIONE → SERVITO → CHIUSO

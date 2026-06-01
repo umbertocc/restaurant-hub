@@ -20,10 +20,14 @@ public class OrdineService {
 
     private final OrdineRepository ordineRepository;
     private final MenuItemRepository menuItemRepository;
+    private final OrdineRealtimePublisher ordineRealtimePublisher;
 
-    public OrdineService(OrdineRepository ordineRepository, MenuItemRepository menuItemRepository) {
+    public OrdineService(OrdineRepository ordineRepository,
+                         MenuItemRepository menuItemRepository,
+                         OrdineRealtimePublisher ordineRealtimePublisher) {
         this.ordineRepository = ordineRepository;
         this.menuItemRepository = menuItemRepository;
+        this.ordineRealtimePublisher = ordineRealtimePublisher;
     }
 
     @Transactional
@@ -60,7 +64,9 @@ public class OrdineService {
         }
 
         ordine.setTotale(totale);
-        return ordineRepository.save(ordine);
+        Ordine saved = ordineRepository.save(ordine);
+        ordineRealtimePublisher.publishCreated(saved);
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -78,6 +84,8 @@ public class OrdineService {
     public Ordine aggiornaStato(UUID id, Ordine.Stato nuovoStato) {
         Ordine ordine = getById(id);
         ordine.setStato(nuovoStato);
-        return ordineRepository.save(ordine);
+        Ordine saved = ordineRepository.save(ordine);
+        ordineRealtimePublisher.publishStatusUpdated(saved);
+        return saved;
     }
 }

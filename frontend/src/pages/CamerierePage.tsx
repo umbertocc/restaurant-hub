@@ -1,12 +1,11 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { CheckCircle, Clock, Flame, Utensils, Wine, Bell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getOrdini, updateStatoOrdine } from '../api/ordini';
 import { CategoriaMenu, Ordine, OrdineItem } from '../types';
-
-const POLL_INTERVAL = 8000;
+import { ORDERS_CHANGED_EVENT } from '../realtime/ordersRealtime';
 
 const CATEGORIE_BEVANDE = new Set<CategoriaMenu>([
   'VINO_ROSSO', 'VINO_BIANCO', 'VINO_ROSE', 'COCKTAIL', 'BIBITA', 'ACQUA',
@@ -41,38 +40,6 @@ export default function CamerierePage() {
   const [ordini, setOrdini] = useState<Ordine[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const knownServiti = useRef<Set<string>>(new Set());
-  const knownIds = useRef<Set<string>>(new Set());
-  const audioCtxRef = useRef<AudioContext | null>(null);
-
-  // Sblocca AudioContext al primo gesto
-  useEffect(() => {
-    const unlock = () => {
-      if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
-      audioCtxRef.current.resume();
-    };
-    window.addEventListener('click', unlock, { once: true });
-    return () => window.removeEventListener('click', unlock);
-  }, []);
-
-  // Beep acuto triplo = ordine pronto da portare
-  const playBeepPronto = useCallback(() => {
-    try {
-      const ctx = audioCtxRef.current;
-      if (!ctx || ctx.state !== 'running') return;
-      [0, 0.25, 0.5].forEach((delay) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.value = 1046; // Do5 — più acuto della cucina
-        gain.gain.setValueAtTime(0.5, ctx.currentTime + delay);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.2);
-        osc.start(ctx.currentTime + delay);
-        osc.stop(ctx.currentTime + delay + 0.2);
-      });
-    } catch { /* ignorato */ }
-  }, []);
 
   const ordina = (list: Ordine[]) => {
     return [...list].sort((a, b) => {
@@ -84,53 +51,35 @@ export default function CamerierePage() {
     });
   };
 
-  const carica = useCallback(async () => {
+  const caricaOrdini = useCallback(async () => {
     if (!ristorante) return;
     try {
       const data = await getOrdini();
       const attivi = (Array.isArray(data) ? data : []).filter(
         (o) => o.stato === 'APERTO' || o.stato === 'IN_PREPARAZIONE' || o.stato === 'SERVITO'
       );
-
-      // Beep quando un ordine passa a SERVITO (cucina pronta)
-      if (knownIds.current.size > 0) {
-        attivi.forEach((o) => {
-          if (o.stato === 'SERVITO' && !knownServiti.current.has(o.id)) {
-            playBeepPronto();
-          }
-        });
-      }
-      attivi.filter(o => o.stato === 'SERVITO').forEach(o => knownServiti.current.add(o.id));
-      attivi.forEach((o) => knownIds.current.add(o.id));
-
       setOrdini(ordina(attivi));
-    } catch { /* ignora */ } finally {
+    } catch {
+      // ignore network errors
+    } finally {
       setLoading(false);
     }
-  }, [ristorante, playBeepPronto]);
-
-  // Prima carica silenziosa
-  useEffect(() => {
-    if (!ristorante) return;
-    getOrdini()
-      .then((data) => {
-        const attivi = (Array.isArray(data) ? data : []).filter(
-          (o) => o.stato === 'APERTO' || o.stato === 'IN_PREPARAZIONE' || o.stato === 'SERVITO'
-        );
-        attivi.forEach((o) => knownIds.current.add(o.id));
-        attivi.filter(o => o.stato === 'SERVITO').forEach(o => knownServiti.current.add(o.id));
-        setOrdini(ordina(attivi));
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
   }, [ristorante]);
 
-  // Polling ogni 8 secondi
+  // Prima carica
   useEffect(() => {
-    if (!ristorante) return;
-    const interval = setInterval(carica, POLL_INTERVAL);
-    return () => clearInterval(interval);
-  }, [ristorante, carica]);
+    setLoading(true);
+    caricaOrdini();
+  }, [caricaOrdini]);
+
+  useEffect(() => {
+    const onOrdersChanged = () => {
+      caricaOrdini();
+    };
+
+    window.addEventListener(ORDERS_CHANGED_EVENT, onOrdersChanged);
+    return () => window.removeEventListener(ORDERS_CHANGED_EVENT, onOrdersChanged);
+  }, [caricaOrdini]);
 
   const consegna = async (ordine: Ordine) => {
     setUpdatingId(ordine.id);
