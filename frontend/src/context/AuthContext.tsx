@@ -3,12 +3,17 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   ReactNode,
 } from 'react';
 import { Ristorante, LoginRequest } from '../types';
 import { login as apiLogin } from '../api/ristoranti';
-import { startOrdersRealtime, stopOrdersRealtime } from '../realtime/ordersRealtime';
+import {
+  OrdineRealtimeMessage,
+  startOrdersRealtime,
+  stopOrdersRealtime,
+} from '../realtime/ordersRealtime';
 
 export type Profilo = 'admin' | 'cameriere' | 'cuoco' | 'barista' | 'pizzaiolo';
 
@@ -44,11 +49,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profilo, setProfiloState] = useState<Profilo>(
     () => (localStorage.getItem('rh_profilo') as Profilo) ?? 'admin'
   );
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const lastBeepAtRef = useRef(0);
 
   const setProfilo = useCallback((p: Profilo) => {
     localStorage.setItem('rh_profilo', p);
     setProfiloState(p);
   }, []);
+
+  // I browser bloccano l'audio automatico finche' non c'e' una prima interazione utente.
+  useEffect(() => {
+    const unlockAudio = () => {
+      try {
+        if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
+        if (audioCtxRef.current.state === 'suspended') {
+          audioCtxRef.current.resume();
+        }
+      } catch {
+        // Ignore: in alcuni ambienti l'audio potrebbe non essere disponibile.
+      }
+    };
+
+    window.addEventListener('pointerdown', unlockAudio, { passive: true });
+    window.addEventListener('keydown', unlockAudio);
+    return () => {
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
+  }, []);
+
+  const playBeep = useCallback(() => {
+    const now = Date.now();
+    if (now - lastBeepAtRef.current < 800) return;
+    lastBeepAtRef.current = now;
+
+    try {
+      const ctx = audioCtxRef.current;
+      if (!ctx || ctx.state !== 'running') return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(1046, ctx.currentTime);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.35, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.35);
+    } catch {
+      // Ignore audio errors to avoid breaking notifications.
+    }
+  }, []);
+
+  const handleOrderChanged = useCallback((payload: OrdineRealtimeMessage) => {
+    // Suono e banner solo quando arriva un ordine nuovo.
+    if (payload.type !== 'CREATED') return;
+    playBeep();
+    setNewOrderAlert(true);
+    window.setTimeout(() => setNewOrderAlert(false), 5000);
+  }, [playBeep]);
 
   useEffect(() => {
     const ristoranteId = ristorante?.id;
@@ -60,16 +120,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     startOrdersRealtime({
       token,
       ristoranteId,
-      onOrderChanged: () => {
-        setNewOrderAlert(true);
-        window.setTimeout(() => setNewOrderAlert(false), 5000);
-      },
+      onOrderChanged: handleOrderChanged,
     });
 
     return () => {
       stopOrdersRealtime();
     };
-  }, [token, ristorante?.id]);
+  }, [token, ristorante?.id, handleOrderChanged]);
 
   const login = useCallback(async (data: LoginRequest) => {
     const response = await apiLogin(data);
