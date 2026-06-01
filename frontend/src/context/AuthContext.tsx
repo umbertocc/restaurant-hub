@@ -102,13 +102,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const isOnOrdiniRoute = useCallback(() => {
+    const path = window.location.pathname.toLowerCase();
+    return /(^|\/)ordini(\/|$)/.test(path);
+  }, []);
+
   const handleOrderChanged = useCallback((payload: OrdineRealtimeMessage) => {
     // Suono e banner solo quando arriva un ordine nuovo.
     if (payload.type !== 'CREATED') return;
+    if (isOnOrdiniRoute()) return;
     playBeep();
     setNewOrderAlert(true);
     window.setTimeout(() => setNewOrderAlert(false), 5000);
-  }, [playBeep]);
+  }, [playBeep, isOnOrdiniRoute]);
 
   useEffect(() => {
     const ristoranteId = ristorante?.id;
