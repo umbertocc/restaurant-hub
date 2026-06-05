@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.example.restaurant.repository.RistoranteRuoloRepository;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @RestController
@@ -63,6 +64,9 @@ public class RistoranteController {
         if (ristorante.getPasswordHash() != null && !ristorante.getPasswordHash().isBlank()) {
             ristorante.setPasswordHash(passwordEncoder.encode(ristorante.getPasswordHash()));
         }
+        // Il trial parte all'approvazione, non alla registrazione.
+        ristorante.setTrialStartAt(null);
+        ristorante.setTrialEndAt(null);
         ristorante.setAttivo(false); // Nuovi ristoranti in attesa di approvazione
         Ristorante salvato = ristoranteRepository.save(ristorante);
         notificaService.notificaNuovaRegistrazione(salvato);
@@ -102,6 +106,11 @@ public class RistoranteController {
                 .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Ristorante non trovato"));
         ristorante.setAttivo(true);
+        if (ristorante.getTrialStartAt() == null || ristorante.getTrialEndAt() == null) {
+            OffsetDateTime now = OffsetDateTime.now();
+            ristorante.setTrialStartAt(now);
+            ristorante.setTrialEndAt(now.plusDays(30));
+        }
         ristoranteRepository.save(ristorante);
     }
 }

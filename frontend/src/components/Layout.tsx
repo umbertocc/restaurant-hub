@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { newOrderAlert, dismissOrderAlert } = useAuth();
+  const { newOrderAlert, dismissOrderAlert, trialExpired, trialDaysLeft } = useAuth();
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
@@ -47,6 +47,21 @@ export default function Layout() {
         </header>
 
         <main className="flex-1 overflow-y-auto">
+          {trialDaysLeft !== null && (
+            <div
+              className={`mx-4 mt-4 rounded-xl border px-4 py-3 text-sm font-medium ${
+                trialExpired
+                  ? 'border-amber-300 bg-amber-50 text-amber-900'
+                  : trialDaysLeft <= 7
+                  ? 'border-orange-300 bg-orange-50 text-orange-900'
+                  : 'border-emerald-300 bg-emerald-50 text-emerald-900'
+              }`}
+            >
+              {trialExpired
+                ? 'Trial scaduto: account in sola lettura. Effettua upgrade per continuare a modificare i dati.'
+                : `Trial attivo: ${trialDaysLeft} giorni rimanenti.`}
+            </div>
+          )}
           <Outlet />
         </main>
       </div>

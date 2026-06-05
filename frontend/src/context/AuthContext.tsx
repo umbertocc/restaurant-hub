@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   ReactNode,
@@ -29,6 +30,8 @@ interface AuthContextValue {
   dismissOrderAlert: () => void;
   profilo: Profilo;
   setProfilo: (p: Profilo) => void;
+  trialExpired: boolean;
+  trialDaysLeft: number | null;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -161,9 +164,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const dismissOrderAlert = useCallback(() => setNewOrderAlert(false), []);
 
+  const trialDaysLeft = useMemo(() => {
+    const trialEnd = ristorante?.trialEndAt;
+    if (!trialEnd) return null;
+    const diffMs = new Date(trialEnd).getTime() - Date.now();
+    return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+  }, [ristorante?.trialEndAt]);
+
+  const trialExpired = useMemo(() => {
+    if (typeof ristorante?.trialExpired === 'boolean') return ristorante.trialExpired;
+    if (!ristorante?.trialEndAt) return false;
+    return new Date(ristorante.trialEndAt).getTime() <= Date.now();
+  }, [ristorante?.trialExpired, ristorante?.trialEndAt]);
+
   return (
     <AuthContext.Provider
-      value={{ token, ristorante, ruoli, login, logout, refreshRistorante, isAuthenticated: !!token, newOrderAlert, dismissOrderAlert, profilo, setProfilo }}
+      value={{ token, ristorante, ruoli, login, logout, refreshRistorante, isAuthenticated: !!token, newOrderAlert, dismissOrderAlert, profilo, setProfilo, trialExpired, trialDaysLeft }}
     >
       {children}
     </AuthContext.Provider>

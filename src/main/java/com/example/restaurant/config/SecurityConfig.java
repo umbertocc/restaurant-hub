@@ -1,6 +1,7 @@
 package com.example.restaurant.config;
 
 import com.example.restaurant.filter.JwtAuthenticationFilter;
+import com.example.restaurant.filter.TrialReadOnlyFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -14,9 +15,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final TrialReadOnlyFilter trialReadOnlyFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+                          TrialReadOnlyFilter trialReadOnlyFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.trialReadOnlyFilter = trialReadOnlyFilter;
     }
 
     @Bean
@@ -45,7 +49,8 @@ public class SecurityConfig {
                 // Tutto il resto richiede autenticazione
                 .anyRequest().authenticated()
             )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(trialReadOnlyFilter, JwtAuthenticationFilter.class);
         return http.build();
     }
 

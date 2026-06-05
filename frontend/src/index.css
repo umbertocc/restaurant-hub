@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -36,5 +38,59 @@
   }
   .page-title {
     @apply text-2xl font-bold text-gray-900;
+  }
+
+  .landing-root {
+    font-family: 'Manrope', sans-serif;
+  }
+
+  .landing-display {
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  .landing-blob {
+    @apply absolute rounded-full blur-3xl;
+  }
+}
+
+@layer utilities {
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes drift {
+    0% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+      transform: translate3d(10px, -10px, 0) scale(1.05);
+    }
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+  }
+
+  .animate-rise {
+    animation: rise 0.7s ease-out both;
+  }
+
+  .animate-rise-delay {
+    animation: rise 0.7s ease-out 0.15s both;
+  }
+
+  .animate-drift {
+    animation: drift 9s ease-in-out infinite;
+  }
+
+  .animate-drift-delay {
+    animation: drift 11s ease-in-out 0.8s infinite;
   }
 }

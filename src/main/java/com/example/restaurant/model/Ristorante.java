@@ -37,6 +37,12 @@ public class Ristorante {
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 
+    @Column(name = "trial_start_at")
+    private OffsetDateTime trialStartAt;
+
+    @Column(name = "trial_end_at")
+    private OffsetDateTime trialEndAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = OffsetDateTime.now();
@@ -77,4 +83,15 @@ public class Ristorante {
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+
+    public OffsetDateTime getTrialStartAt() { return trialStartAt; }
+    public void setTrialStartAt(OffsetDateTime trialStartAt) { this.trialStartAt = trialStartAt; }
+
+    public OffsetDateTime getTrialEndAt() { return trialEndAt; }
+    public void setTrialEndAt(OffsetDateTime trialEndAt) { this.trialEndAt = trialEndAt; }
+
+    @Transient
+    public Boolean getTrialExpired() {
+        return trialEndAt != null && OffsetDateTime.now().isAfter(trialEndAt);
+    }
 }

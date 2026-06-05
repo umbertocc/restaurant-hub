@@ -13,8 +13,13 @@ CREATE TABLE IF NOT EXISTS restaurant.ristoranti (
     password_hash VARCHAR(255),
     piano       VARCHAR(20) NOT NULL DEFAULT 'FREE',
     attivo      BOOLEAN NOT NULL DEFAULT TRUE,
+    trial_start_at TIMESTAMPTZ,
+    trial_end_at TIMESTAMPTZ,
     created_at  TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS trial_start_at TIMESTAMPTZ;
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS trial_end_at TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS restaurant.tavoli (
     id              BIGSERIAL PRIMARY KEY,

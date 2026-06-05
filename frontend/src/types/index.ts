@@ -11,6 +11,9 @@ export interface Ristorante {
   logoUrl?: string;
   piano: Piano;
   attivo: boolean;
+  trialStartAt?: string;
+  trialEndAt?: string;
+  trialExpired?: boolean;
   createdAt: string;
 }
 
