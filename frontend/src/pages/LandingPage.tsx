@@ -29,6 +29,14 @@ const stats = [
   { value: '24/7', label: 'monitoraggio operativo multi-ruolo' },
 ];
 
+const contact = {
+  phoneDisplay: '+39 380 458 0135',
+  phoneHref: 'tel:+393804580135',
+  email: 'info@restauranthub.it',
+  whatsappDisplay: '+39 380 458 0135',
+  whatsappHref: 'https://wa.me/393804580135',
+};
+
 export default function LandingPage() {
   return (
     <main className="landing-root min-h-screen overflow-x-hidden bg-[#fff8f0] text-[#2f241f]">
@@ -113,6 +121,47 @@ export default function LandingPage() {
         ))}
       </section>
 
+      <section className="mx-auto w-full max-w-6xl px-6 pb-14 md:px-10">
+        <div className="rounded-3xl border border-[#efcfb2] bg-[#fffdfa] p-8 md:p-10">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8f3a19]">Contatti</p>
+          <h2 className="landing-display mt-2 text-3xl text-[#2f1d14]">Parliamo del tuo ristorante</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#5f473c]">
+            Ti aiutiamo a configurare Restaurant Hub, incluso menu digitale sui tavoli, prenotazioni e operativita di sala/cucina.
+          </p>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <a
+              href={contact.phoneHref}
+              className="rounded-2xl border border-[#f1d8c2] bg-white p-5 transition hover:-translate-y-0.5 hover:border-[#dea77a]"
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#9f4b1e]">Telefono</p>
+              <p className="landing-display mt-2 text-xl text-[#2b1a13]">{contact.phoneDisplay}</p>
+              <p className="mt-2 text-sm text-[#6a4f42]">Lun-Sab 09:00-19:00</p>
+            </a>
+
+            <a
+              href={`mailto:${contact.email}`}
+              className="rounded-2xl border border-[#f1d8c2] bg-white p-5 transition hover:-translate-y-0.5 hover:border-[#dea77a]"
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#9f4b1e]">Email</p>
+              <p className="landing-display mt-2 text-xl text-[#2b1a13]">{contact.email}</p>
+              <p className="mt-2 text-sm text-[#6a4f42]">Risposta entro 24 ore</p>
+            </a>
+
+            <a
+              href={contact.whatsappHref}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-2xl border border-[#f1d8c2] bg-white p-5 transition hover:-translate-y-0.5 hover:border-[#dea77a]"
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#9f4b1e]">WhatsApp</p>
+              <p className="landing-display mt-2 text-xl text-[#2b1a13]">{contact.whatsappDisplay}</p>
+              <p className="mt-2 text-sm text-[#6a4f42]">Consulenza rapida pre-attivazione</p>
+            </a>
+          </div>
+        </div>
+      </section>
+
       <section className="mx-auto w-full max-w-6xl px-6 pb-20 md:px-10">
         <div className="rounded-3xl border border-[#efc8a0] bg-[#ffe6cc] p-8 text-center shadow-[0_18px_60px_-40px_rgba(125,48,10,0.9)] md:p-12">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8f3a19]">Pronto a partire</p>
@@ -138,6 +187,20 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <footer className="border-t border-[#efd6bc] bg-[#fff3e5]">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 py-6 text-sm text-[#6a4f42] md:flex-row md:items-center md:justify-between md:px-10">
+          <p>© {new Date().getFullYear()} Restaurant Hub · Supporto: {contact.email} · {contact.phoneDisplay}</p>
+          <div className="flex items-center gap-4">
+            <Link to="/privacy" className="font-medium text-[#8f3a19] hover:underline">
+              Privacy
+            </Link>
+            <Link to="/termini" className="font-medium text-[#8f3a19] hover:underline">
+              Termini
+            </Link>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }

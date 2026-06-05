@@ -14,6 +14,7 @@ export default function RegisterPage() {
     citta: '',
   });
   const [showPwd, setShowPwd] = useState(false);
+  const [acceptedLegal, setAcceptedLegal] = useState(false);
   // Rimosso registrationCode: non più richiesto
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,6 +26,12 @@ export default function RegisterPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!acceptedLegal) {
+      setError('Devi accettare Privacy Policy e Termini di Servizio per continuare.');
+      return;
+    }
+
     setLoading(true);
     try {
       await registerRistorante(form); // Non serve più il codice
@@ -148,6 +155,19 @@ export default function RegisterPage() {
                 onChange={(e) => set('indirizzo', e.target.value)}
               />
             </div>
+
+            <label className="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={acceptedLegal}
+                onChange={(e) => setAcceptedLegal(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                required
+              />
+              <span>
+                Accetto la <Link to="/privacy" className="font-medium text-red-600 hover:underline">Privacy Policy</Link> e i <Link to="/termini" className="font-medium text-red-600 hover:underline">Termini di Servizio</Link>.
+              </span>
+            </label>
             {/* Campo codice di registrazione rimosso */}
 
             {error && (
