@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,8 +31,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7); 
-            if (jwtUtil.isTokenValid(token)) {
+            String token = authHeader.substring(7);
+            if (token.isBlank()) {
+                rejectUnauthorized(response, "Token mancante");
+                return;
+            }
+
+            try {
+                if (!jwtUtil.isTokenValid(token)) {
+                    rejectUnauthorized(response, "Token non valido o scaduto");
+                    return;
+                }
+
                 String username = jwtUtil.extractUsername(token);
                 String role = jwtUtil.extractRole(token);
                 Long ristoranteId = jwtUtil.extractRistoranteId(token);
@@ -43,8 +54,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         List.of(new SimpleGrantedAuthority("ROLE_" + role))
                 );
                 SecurityContextHolder.getContext().setAuthentication(auth);
+            } catch (Exception ex) {
+                rejectUnauthorized(response, "Token non valido o scaduto");
+                return;
             }
         }
         filterChain.doFilter(request, response);
+    }
+
+    private void rejectUnauthorized(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setHeader("WWW-Authenticate", "Bearer");
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.getWriter().write("{\"status\":401,\"error\":\"" + message + "\"}");
     }
 }
