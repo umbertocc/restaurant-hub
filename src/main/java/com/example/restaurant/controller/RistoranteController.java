@@ -3,10 +3,8 @@ package com.example.restaurant.controller;
 import com.example.restaurant.model.Ristorante;
 import com.example.restaurant.repository.RistoranteRepository;
 import com.example.restaurant.service.NotificaService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import com.example.restaurant.repository.RistoranteRuoloRepository;
 import org.springframework.web.bind.annotation.*;
@@ -67,6 +65,9 @@ public class RistoranteController {
         // Il trial parte all'approvazione, non alla registrazione.
         ristorante.setTrialStartAt(null);
         ristorante.setTrialEndAt(null);
+        ristorante.setSubscriptionStatus(Ristorante.SubscriptionStatus.TRIAL_ACTIVE);
+        ristorante.setTrialGraceEndAt(null);
+        ristorante.setTrialLastNotifiedDay(null);
         ristorante.setAttivo(false); // Nuovi ristoranti in attesa di approvazione
         Ristorante salvato = ristoranteRepository.save(ristorante);
         notificaService.notificaNuovaRegistrazione(salvato);
@@ -110,6 +111,9 @@ public class RistoranteController {
             OffsetDateTime now = OffsetDateTime.now();
             ristorante.setTrialStartAt(now);
             ristorante.setTrialEndAt(now.plusDays(30));
+            ristorante.setSubscriptionStatus(Ristorante.SubscriptionStatus.TRIAL_ACTIVE);
+            ristorante.setTrialGraceEndAt(null);
+            ristorante.setTrialLastNotifiedDay(null);
         }
         ristoranteRepository.save(ristorante);
     }

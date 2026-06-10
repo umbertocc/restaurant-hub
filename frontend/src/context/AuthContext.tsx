@@ -165,17 +165,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const dismissOrderAlert = useCallback(() => setNewOrderAlert(false), []);
 
   const trialDaysLeft = useMemo(() => {
+    if (ristorante?.subscriptionStatus === 'ACTIVE_PAID') return null;
     const trialEnd = ristorante?.trialEndAt;
     if (!trialEnd) return null;
     const diffMs = new Date(trialEnd).getTime() - Date.now();
     return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-  }, [ristorante?.trialEndAt]);
+  }, [ristorante?.subscriptionStatus, ristorante?.trialEndAt]);
 
   const trialExpired = useMemo(() => {
+    if (ristorante?.subscriptionStatus === 'ACTIVE_PAID') return false;
+    if (ristorante?.subscriptionStatus === 'EXPIRED_TRIAL') return true;
     if (typeof ristorante?.trialExpired === 'boolean') return ristorante.trialExpired;
     if (!ristorante?.trialEndAt) return false;
     return new Date(ristorante.trialEndAt).getTime() <= Date.now();
-  }, [ristorante?.trialExpired, ristorante?.trialEndAt]);
+  }, [ristorante?.subscriptionStatus, ristorante?.trialExpired, ristorante?.trialEndAt]);
 
   return (
     <AuthContext.Provider

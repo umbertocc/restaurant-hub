@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { useAuth } from '../context/AuthContext';
@@ -60,6 +61,14 @@ export default function Layout() {
               {trialExpired
                 ? 'Trial scaduto: account in sola lettura. Effettua upgrade per continuare a modificare i dati.'
                 : `Trial attivo: ${trialDaysLeft} giorni rimanenti.`}
+              {(trialExpired || trialDaysLeft <= 7) && (
+                <Link
+                  to="/abbonamento"
+                  className="ml-3 inline-flex items-center rounded-lg bg-gray-900 px-3 py-1 text-xs font-semibold text-white hover:bg-black"
+                >
+                  Attiva abbonamento
+                </Link>
+              )}
             </div>
           )}
           <Outlet />

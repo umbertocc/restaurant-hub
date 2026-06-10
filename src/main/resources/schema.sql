@@ -20,6 +20,21 @@ CREATE TABLE IF NOT EXISTS restaurant.ristoranti (
 
 ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS trial_start_at TIMESTAMPTZ;
 ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS trial_end_at TIMESTAMPTZ;
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(30) NOT NULL DEFAULT 'TRIAL_ACTIVE';
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255);
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR(255);
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS subscription_current_period_end TIMESTAMPTZ;
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS subscription_cancel_at_period_end BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS trial_grace_end_at TIMESTAMPTZ;
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS trial_last_notified_day INT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_ristoranti_stripe_customer_id
+    ON restaurant.ristoranti(stripe_customer_id)
+    WHERE stripe_customer_id IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_ristoranti_stripe_subscription_id
+    ON restaurant.ristoranti(stripe_subscription_id)
+    WHERE stripe_subscription_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS restaurant.tavoli (
     id              BIGSERIAL PRIMARY KEY,

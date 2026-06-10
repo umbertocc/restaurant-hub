@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
+import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -28,9 +29,9 @@ public class TrialReadOnlyFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
         if (SAFE_METHODS.contains(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
@@ -39,6 +40,11 @@ public class TrialReadOnlyFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         // Consenti cambio password anche con trial scaduto.
         if ("/api/auth/change-password".equals(path)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        // Consenti sempre i flussi di billing per permettere upgrade anche a trial scaduto.
+        if (path.startsWith("/api/billing/")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -55,10 +61,11 @@ public class TrialReadOnlyFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (OffsetDateTime.now().isAfter(ristorante.getTrialEndAt())) {
+        if (ristorante.getSubscriptionStatus() != Ristorante.SubscriptionStatus.ACTIVE_PAID
+                && OffsetDateTime.now().isAfter(ristorante.getTrialEndAt())) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.getWriter().write("{\"message\":\"Trial scaduto: account in sola lettura. Effettua upgrade per continuare a modificare dati.\"}");
+            response.getWriter().write("{\"code\":\"TRIAL_EXPIRED\",\"message\":\"Trial scaduto: account in sola lettura. Effettua upgrade per continuare a modificare dati.\"}");
             return;
         }
 

@@ -1,5 +1,11 @@
 // ── Ristorante ───────────────────────────────────────────────────────────────
 export type Piano = 'FREE' | 'PRO' | 'ENTERPRISE';
+export type SubscriptionStatus =
+  | 'TRIAL_ACTIVE'
+  | 'TRIAL_GRACE'
+  | 'EXPIRED_TRIAL'
+  | 'ACTIVE_PAID'
+  | 'CANCELED';
 
 export interface Ristorante {
   id: number;
@@ -10,10 +16,16 @@ export interface Ristorante {
   citta?: string;
   logoUrl?: string;
   piano: Piano;
+  subscriptionStatus?: SubscriptionStatus;
   attivo: boolean;
   trialStartAt?: string;
   trialEndAt?: string;
+  trialGraceEndAt?: string;
   trialExpired?: boolean;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  subscriptionCurrentPeriodEnd?: string;
+  subscriptionCancelAtPeriodEnd?: boolean;
   createdAt: string;
 }
 

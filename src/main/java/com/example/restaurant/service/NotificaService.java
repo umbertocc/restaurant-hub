@@ -63,4 +63,48 @@ public class NotificaService {
             logger.error("[EMAIL] Errore invio notifica nuova registrazione: {}", e.getMessage(), e);
         }
     }
+
+    @Async
+    public void notificaReminderTrial(Ristorante ristorante, int giorniMancanti) {
+        if (giorniMancanti <= 0) {
+            return;
+        }
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setFrom(mittente);
+        msg.setTo(ristorante.getEmail());
+        msg.setSubject("Il tuo trial Restaurant Hub scade tra " + giorniMancanti + " giorno/i");
+        msg.setText(
+            "Ciao " + ristorante.getNome() + ",\n\n" +
+            "il periodo di prova scadrà tra " + giorniMancanti + " giorno/i.\n" +
+            "Per evitare interruzioni, attiva l'abbonamento dalla sezione Abbonamento del pannello.\n\n" +
+            "Team Restaurant Hub"
+        );
+        try {
+            mailSender.send(msg);
+        } catch (Exception e) {
+            logger.warn("[EMAIL] Reminder trial non inviato a {}: {}", ristorante.getEmail(), e.getMessage());
+        }
+    }
+
+    @Async
+    public void notificaTrialScaduto(Ristorante ristorante, int graceDays) {
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setFrom(mittente);
+        msg.setTo(ristorante.getEmail());
+        msg.setSubject("Trial scaduto - attiva il tuo abbonamento");
+        String graceText = graceDays > 0
+            ? "Hai ancora " + graceDays + " giorni di grace period prima del blocco completo delle funzioni premium."
+            : "Le funzioni di modifica dati sono ora in sola lettura finché non attivi un piano.";
+        msg.setText(
+            "Ciao " + ristorante.getNome() + ",\n\n" +
+            "il trial di 30 giorni è terminato. " + graceText + "\n" +
+            "Vai nella sezione Abbonamento per attivare il piano PRO o ENTERPRISE.\n\n" +
+            "Team Restaurant Hub"
+        );
+        try {
+            mailSender.send(msg);
+        } catch (Exception e) {
+            logger.warn("[EMAIL] Notifica trial scaduto non inviata a {}: {}", ristorante.getEmail(), e.getMessage());
+        }
+    }
 }

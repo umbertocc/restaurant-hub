@@ -25,6 +25,7 @@ import AdminRistorantiPage from './pages/AdminRistorantiPage';
 import LandingPage from './pages/LandingPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TerminiPage from './pages/TerminiPage';
+import BillingPage from './pages/BillingPage';
 
 export default function App() {
   return (
@@ -63,6 +64,7 @@ export default function App() {
             <Route path="pizzeria" element={<PizzeriaPage />} />
             <Route path="sala" element={<CamerierePage />} />
             <Route path="profilo" element={<ProfiloPage />} />
+            <Route path="abbonamento" element={<BillingPage />} />
           </Route>
 
           {/* Superadmin only */}

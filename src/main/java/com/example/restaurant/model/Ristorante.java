@@ -43,12 +43,42 @@ public class Ristorante {
     @Column(name = "trial_end_at")
     private OffsetDateTime trialEndAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "subscription_status", nullable = false)
+    private SubscriptionStatus subscriptionStatus = SubscriptionStatus.TRIAL_ACTIVE;
+
+    @Column(name = "stripe_customer_id")
+    private String stripeCustomerId;
+
+    @Column(name = "stripe_subscription_id")
+    private String stripeSubscriptionId;
+
+    @Column(name = "subscription_current_period_end")
+    private OffsetDateTime subscriptionCurrentPeriodEnd;
+
+    @Column(name = "subscription_cancel_at_period_end", nullable = false)
+    private Boolean subscriptionCancelAtPeriodEnd = false;
+
+    @Column(name = "trial_grace_end_at")
+    private OffsetDateTime trialGraceEndAt;
+
+    @Column(name = "trial_last_notified_day")
+    private Integer trialLastNotifiedDay;
+
     @PrePersist
     protected void onCreate() {
         createdAt = OffsetDateTime.now();
     }
 
     public enum Piano { FREE, PRO, ENTERPRISE }
+
+    public enum SubscriptionStatus {
+        TRIAL_ACTIVE,
+        TRIAL_GRACE,
+        EXPIRED_TRIAL,
+        ACTIVE_PAID,
+        CANCELED
+    }
 
     // Getters & Setters
     public Long getId() { return id; }
@@ -90,8 +120,32 @@ public class Ristorante {
     public OffsetDateTime getTrialEndAt() { return trialEndAt; }
     public void setTrialEndAt(OffsetDateTime trialEndAt) { this.trialEndAt = trialEndAt; }
 
+    public SubscriptionStatus getSubscriptionStatus() { return subscriptionStatus; }
+    public void setSubscriptionStatus(SubscriptionStatus subscriptionStatus) { this.subscriptionStatus = subscriptionStatus; }
+
+    public String getStripeCustomerId() { return stripeCustomerId; }
+    public void setStripeCustomerId(String stripeCustomerId) { this.stripeCustomerId = stripeCustomerId; }
+
+    public String getStripeSubscriptionId() { return stripeSubscriptionId; }
+    public void setStripeSubscriptionId(String stripeSubscriptionId) { this.stripeSubscriptionId = stripeSubscriptionId; }
+
+    public OffsetDateTime getSubscriptionCurrentPeriodEnd() { return subscriptionCurrentPeriodEnd; }
+    public void setSubscriptionCurrentPeriodEnd(OffsetDateTime subscriptionCurrentPeriodEnd) { this.subscriptionCurrentPeriodEnd = subscriptionCurrentPeriodEnd; }
+
+    public Boolean getSubscriptionCancelAtPeriodEnd() { return subscriptionCancelAtPeriodEnd; }
+    public void setSubscriptionCancelAtPeriodEnd(Boolean subscriptionCancelAtPeriodEnd) { this.subscriptionCancelAtPeriodEnd = subscriptionCancelAtPeriodEnd; }
+
+    public OffsetDateTime getTrialGraceEndAt() { return trialGraceEndAt; }
+    public void setTrialGraceEndAt(OffsetDateTime trialGraceEndAt) { this.trialGraceEndAt = trialGraceEndAt; }
+
+    public Integer getTrialLastNotifiedDay() { return trialLastNotifiedDay; }
+    public void setTrialLastNotifiedDay(Integer trialLastNotifiedDay) { this.trialLastNotifiedDay = trialLastNotifiedDay; }
+
     @Transient
     public Boolean getTrialExpired() {
+        if (subscriptionStatus == SubscriptionStatus.ACTIVE_PAID) {
+            return false;
+        }
         return trialEndAt != null && OffsetDateTime.now().isAfter(trialEndAt);
     }
 }
