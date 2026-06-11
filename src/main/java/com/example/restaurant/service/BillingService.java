@@ -106,17 +106,17 @@ public class BillingService {
     }
 
     public Map<String, Object> getBillingStatus(Ristorante ristorante) {
-        return Map.of(
-                "subscriptionStatus", ristorante.getSubscriptionStatus(),
-                "piano", ristorante.getPiano(),
-                "trialStartAt", ristorante.getTrialStartAt(),
-                "trialEndAt", ristorante.getTrialEndAt(),
-                "trialGraceEndAt", ristorante.getTrialGraceEndAt(),
-                "subscriptionCurrentPeriodEnd", ristorante.getSubscriptionCurrentPeriodEnd(),
-                "subscriptionCancelAtPeriodEnd", Boolean.TRUE.equals(ristorante.getSubscriptionCancelAtPeriodEnd()),
-                "stripeCustomerId", ristorante.getStripeCustomerId(),
-                "stripeSubscriptionId", ristorante.getStripeSubscriptionId()
-        );
+        Map<String, Object> status = new LinkedHashMap<>();
+        status.put("subscriptionStatus", ristorante.getSubscriptionStatus());
+        status.put("piano", ristorante.getPiano());
+        status.put("trialStartAt", ristorante.getTrialStartAt());
+        status.put("trialEndAt", ristorante.getTrialEndAt());
+        status.put("trialGraceEndAt", ristorante.getTrialGraceEndAt());
+        status.put("subscriptionCurrentPeriodEnd", ristorante.getSubscriptionCurrentPeriodEnd());
+        status.put("subscriptionCancelAtPeriodEnd", Boolean.TRUE.equals(ristorante.getSubscriptionCancelAtPeriodEnd()));
+        status.put("stripeCustomerId", ristorante.getStripeCustomerId());
+        status.put("stripeSubscriptionId", ristorante.getStripeSubscriptionId());
+        return status;
     }
 
     public Map<String, Object> createCustomerPortalSession(Ristorante ristorante) {
