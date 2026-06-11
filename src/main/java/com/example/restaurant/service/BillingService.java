@@ -116,7 +116,7 @@ public class BillingService {
         status.put("subscriptionCancelAtPeriodEnd", Boolean.TRUE.equals(ristorante.getSubscriptionCancelAtPeriodEnd()));
         status.put("stripeCustomerId", ristorante.getStripeCustomerId());
         status.put("stripeSubscriptionId", ristorante.getStripeSubscriptionId());
-        return status;
+        return status; 
     }
 
     public Map<String, Object> createCustomerPortalSession(Ristorante ristorante) {
