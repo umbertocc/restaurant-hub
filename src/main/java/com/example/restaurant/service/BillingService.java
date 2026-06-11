@@ -11,10 +11,12 @@ import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.model.Invoice;
 import com.stripe.model.StripeObject;
 import com.stripe.model.Subscription;
+import com.stripe.model.SubscriptionCollection;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.InvoiceListParams;
+import com.stripe.param.SubscriptionListParams;
 import com.stripe.param.SubscriptionUpdateParams;
 import com.stripe.param.SubscriptionRetrieveParams;
 import com.stripe.param.checkout.SessionCreateParams;
@@ -103,17 +105,19 @@ public class BillingService {
     }
 
     public Map<String, Object> getBillingStatus(Ristorante ristorante) {
+        Ristorante current = trySyncBillingStatusFromStripe(ristorante);
+
         Map<String, Object> status = new LinkedHashMap<>();
-        status.put("subscriptionStatus", ristorante.getSubscriptionStatus());
-        status.put("piano", ristorante.getPiano());
-        status.put("trialStartAt", ristorante.getTrialStartAt());
-        status.put("trialEndAt", ristorante.getTrialEndAt());
-        status.put("trialGraceEndAt", ristorante.getTrialGraceEndAt());
-        status.put("subscriptionCurrentPeriodEnd", ristorante.getSubscriptionCurrentPeriodEnd());
-        status.put("subscriptionCancelAtPeriodEnd", Boolean.TRUE.equals(ristorante.getSubscriptionCancelAtPeriodEnd()));
-        status.put("stripeCustomerId", ristorante.getStripeCustomerId());
-        status.put("stripeSubscriptionId", ristorante.getStripeSubscriptionId());
-        return status; 
+        status.put("subscriptionStatus", current.getSubscriptionStatus());
+        status.put("piano", current.getPiano());
+        status.put("trialStartAt", current.getTrialStartAt());
+        status.put("trialEndAt", current.getTrialEndAt());
+        status.put("trialGraceEndAt", current.getTrialGraceEndAt());
+        status.put("subscriptionCurrentPeriodEnd", current.getSubscriptionCurrentPeriodEnd());
+        status.put("subscriptionCancelAtPeriodEnd", Boolean.TRUE.equals(current.getSubscriptionCancelAtPeriodEnd()));
+        status.put("stripeCustomerId", current.getStripeCustomerId());
+        status.put("stripeSubscriptionId", current.getStripeSubscriptionId());
+        return status;
     }
 
     public Map<String, Object> createCustomerPortalSession(Ristorante ristorante) {
@@ -259,15 +263,36 @@ public class BillingService {
         }
 
         EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
-        Optional<StripeObject> stripeObject = deserializer.getObject();
-        if (stripeObject.isEmpty()) {
+        StripeObject stripeObject = deserializer.getObject().orElseGet(() -> {
+            try {
+                // Fallback utile quando la versione API Stripe dell'evento e' piu' nuova
+                // della versione supportata dal client stripe-java.
+                return deserializer.deserializeUnsafe();
+            } catch (Exception ignored) {
+                return null;
+            }
+        });
+
+        if (stripeObject == null) {
             return;
         }
 
         switch (event.getType()) {
-            case "checkout.session.completed" -> onCheckoutSessionCompleted((Session) stripeObject.get());
-            case "customer.subscription.updated" -> onSubscriptionUpdated((Subscription) stripeObject.get());
-            case "customer.subscription.deleted" -> onSubscriptionDeleted((Subscription) stripeObject.get());
+            case "checkout.session.completed" -> {
+                if (stripeObject instanceof Session session) {
+                    onCheckoutSessionCompleted(session);
+                }
+            }
+            case "customer.subscription.updated" -> {
+                if (stripeObject instanceof Subscription subscription) {
+                    onSubscriptionUpdated(subscription);
+                }
+            }
+            case "customer.subscription.deleted" -> {
+                if (stripeObject instanceof Subscription subscription) {
+                    onSubscriptionDeleted(subscription);
+                }
+            }
             default -> {
                 // Event not used for now.
             }
@@ -378,6 +403,67 @@ public class BillingService {
         }
 
         return ristorante;
+    }
+
+    private Ristorante trySyncBillingStatusFromStripe(Ristorante ristorante) {
+        // Evita chiamate Stripe inutili quando l'account e' gia' correttamente attivo.
+        if (ristorante.getSubscriptionStatus() == Ristorante.SubscriptionStatus.ACTIVE_PAID
+                && ristorante.getPiano() == Ristorante.Piano.PRO) {
+            return ristorante;
+        }
+
+        if (stripeSecretKey == null || stripeSecretKey.isBlank()) {
+            return ristorante;
+        }
+
+        String customerId = ristorante.getStripeCustomerId();
+        String subscriptionId = ristorante.getStripeSubscriptionId();
+        if ((customerId == null || customerId.isBlank()) && (subscriptionId == null || subscriptionId.isBlank())) {
+            return ristorante;
+        }
+
+        try {
+            Stripe.apiKey = stripeSecretKey;
+
+            Subscription subscription = null;
+            if (subscriptionId != null && !subscriptionId.isBlank()) {
+                try {
+                    subscription = Subscription.retrieve(
+                            subscriptionId,
+                            SubscriptionRetrieveParams.builder().build(),
+                            null
+                    );
+                } catch (StripeException ignored) {
+                    // Fallback sulla ricerca per customer.
+                }
+            }
+
+            if (subscription == null && customerId != null && !customerId.isBlank()) {
+                SubscriptionListParams params = SubscriptionListParams.builder()
+                        .setCustomer(customerId)
+                        .setLimit(5L)
+                        .build();
+                SubscriptionCollection collection = Subscription.list(params);
+                if (collection.getData() != null && !collection.getData().isEmpty()) {
+                    subscription = collection.getData().get(0);
+                }
+            }
+
+            if (subscription == null) {
+                return ristorante;
+            }
+
+            String status = subscription.getStatus();
+            if ("active".equalsIgnoreCase(status) || "trialing".equalsIgnoreCase(status)) {
+                applyActivePaidSubscription(ristorante, subscription);
+                ristorante.setPiano(Ristorante.Piano.PRO);
+                return ristoranteRepository.save(ristorante);
+            }
+
+            return ristorante;
+        } catch (StripeException ignored) {
+            return ristorante;
+        }
     }
 
     private String ensureStripeCustomer(Ristorante ristorante) throws StripeException {
