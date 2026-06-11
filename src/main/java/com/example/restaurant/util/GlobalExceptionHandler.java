@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice
@@ -23,9 +24,9 @@ public class GlobalExceptionHandler {
         if (isAuthError) {
             builder.header("WWW-Authenticate", "Bearer");
         }
-        return builder.body(Map.of(
-            "status", ex.getStatusCode().value(),
-            "error", ex.getReason()
-        ));
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", ex.getStatusCode().value());
+        body.put("error", ex.getReason() != null ? ex.getReason() : "Errore richiesta");
+        return builder.body(body);
         }
 }
