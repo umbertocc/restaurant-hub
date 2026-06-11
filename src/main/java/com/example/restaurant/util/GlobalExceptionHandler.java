@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
         if (isAuthError) {
             builder.header("WWW-Authenticate", "Bearer");
         }
-        Map<String, Object> body = new LinkedHashMap<>();
+        Map<String, Object> body = new LinkedHashMap<>(); 
         body.put("status", ex.getStatusCode().value());
         body.put("error", ex.getReason() != null ? ex.getReason() : "Errore richiesta");
         return builder.body(body);
