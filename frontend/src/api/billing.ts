@@ -7,7 +7,7 @@ export interface BillingStatusResponse {
     | 'EXPIRED_TRIAL'
     | 'ACTIVE_PAID'
     | 'CANCELED';
-  piano?: 'FREE' | 'PRO' | 'ENTERPRISE';
+  piano?: 'FREE' | 'PRO';
   trialStartAt?: string;
   trialEndAt?: string;
   trialGraceEndAt?: string;
@@ -44,7 +44,7 @@ export async function getBillingStatus(): Promise<BillingStatusResponse> {
   return data;
 }
 
-export async function createCheckoutSession(piano: 'PRO' | 'ENTERPRISE'): Promise<CheckoutSessionResponse> {
+export async function createCheckoutSession(piano: 'PRO'): Promise<CheckoutSessionResponse> {
   const { data } = await client.post<CheckoutSessionResponse>('/billing/checkout-session', { piano });
   return data;
 }

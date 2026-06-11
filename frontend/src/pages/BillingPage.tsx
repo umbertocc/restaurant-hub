@@ -26,7 +26,7 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
-  const [checkoutLoading, setCheckoutLoading] = useState<'PRO' | 'ENTERPRISE' | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState<'PRO' | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [reactivateLoading, setReactivateLoading] = useState(false);
@@ -81,7 +81,7 @@ export default function BillingPage() {
     return status?.subscriptionStatus !== 'ACTIVE_PAID';
   }, [status?.subscriptionStatus]);
 
-  const startCheckout = async (piano: 'PRO' | 'ENTERPRISE') => {
+  const startCheckout = async (piano: 'PRO') => {
     try {
       setCheckoutLoading(piano);
       setError(null);
@@ -209,13 +209,6 @@ export default function BillingPage() {
               className="rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-gray-400"
             >
               {checkoutLoading === 'PRO' ? 'Reindirizzamento...' : 'Attiva PRO (mensile)'}
-            </button>
-            <button
-              onClick={() => startCheckout('ENTERPRISE')}
-              disabled={!canActivate || checkoutLoading !== null}
-              className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-red-300"
-            >
-              {checkoutLoading === 'ENTERPRISE' ? 'Reindirizzamento...' : 'Attiva ENTERPRISE (mensile)'}
             </button>
             <button
               onClick={() => void load()}

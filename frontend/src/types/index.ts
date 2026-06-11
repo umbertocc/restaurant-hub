@@ -1,5 +1,5 @@
 // ── Ristorante ───────────────────────────────────────────────────────────────
-export type Piano = 'FREE' | 'PRO' | 'ENTERPRISE';
+export type Piano = 'FREE' | 'PRO';
 export type SubscriptionStatus =
   | 'TRIAL_ACTIVE'
   | 'TRIAL_GRACE'

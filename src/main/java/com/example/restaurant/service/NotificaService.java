@@ -98,7 +98,7 @@ public class NotificaService {
         msg.setText(
             "Ciao " + ristorante.getNome() + ",\n\n" +
             "il trial di 30 giorni è terminato. " + graceText + "\n" +
-            "Vai nella sezione Abbonamento per attivare il piano PRO o ENTERPRISE.\n\n" +
+            "Vai nella sezione Abbonamento per attivare il piano PRO.\n\n" +
             "Team Restaurant Hub"
         );
         try {

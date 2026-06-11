@@ -70,7 +70,7 @@ public class Ristorante {
         createdAt = OffsetDateTime.now();
     }
 
-    public enum Piano { FREE, PRO, ENTERPRISE }
+    public enum Piano { FREE, PRO }
 
     public enum SubscriptionStatus {
         TRIAL_ACTIVE,

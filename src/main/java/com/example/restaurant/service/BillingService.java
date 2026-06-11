@@ -45,9 +45,6 @@ public class BillingService {
     @Value("${app.billing.stripe.price-pro-monthly:}")
     private String proMonthlyPriceId;
 
-    @Value("${app.billing.stripe.price-enterprise-monthly:}")
-    private String enterpriseMonthlyPriceId;
-
     @Value("${app.billing.success-url}")
     private String successUrl;
 
@@ -66,11 +63,11 @@ public class BillingService {
         Stripe.apiKey = stripeSecretKey;
 
         String normalizedPiano = piano == null ? "" : piano.trim().toUpperCase();
-        String priceId = switch (normalizedPiano) {
-            case "PRO" -> proMonthlyPriceId;
-            case "ENTERPRISE" -> enterpriseMonthlyPriceId;
-            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Piano non supportato");
-        };
+        if (!"PRO".equals(normalizedPiano)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Piano non supportato");
+        }
+
+        String priceId = proMonthlyPriceId;
 
         if (priceId == null || priceId.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -297,11 +294,7 @@ public class BillingService {
             }
 
             applyActivePaidSubscription(ristorante, subscription);
-            if ("PRO".equalsIgnoreCase(session.getMetadata().get("piano"))) {
-                ristorante.setPiano(Ristorante.Piano.PRO);
-            } else if ("ENTERPRISE".equalsIgnoreCase(session.getMetadata().get("piano"))) {
-                ristorante.setPiano(Ristorante.Piano.ENTERPRISE);
-            }
+            ristorante.setPiano(Ristorante.Piano.PRO);
             ristoranteRepository.save(ristorante);
         } catch (StripeException e) {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,

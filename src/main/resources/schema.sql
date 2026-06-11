@@ -28,6 +28,11 @@ ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS subscription_cancel_a
 ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS trial_grace_end_at TIMESTAMPTZ;
 ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS trial_last_notified_day INT;
 
+-- Normalizza eventuali dati legacy: il piano ENTERPRISE non e piu supportato.
+UPDATE restaurant.ristoranti
+SET piano = 'PRO'
+WHERE UPPER(piano) = 'ENTERPRISE';
+
 CREATE UNIQUE INDEX IF NOT EXISTS uk_ristoranti_stripe_customer_id
     ON restaurant.ristoranti(stripe_customer_id)
     WHERE stripe_customer_id IS NOT NULL;
