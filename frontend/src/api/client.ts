@@ -22,7 +22,7 @@ client.interceptors.response.use(
       if (wwwAuth) {
         localStorage.removeItem('rh_token');
         localStorage.removeItem('rh_ristorante');
-        window.location.href = '/login';
+        window.location.href = `${import.meta.env.BASE_URL}login`;
       }
     }
     if (error.response?.status === 403) {

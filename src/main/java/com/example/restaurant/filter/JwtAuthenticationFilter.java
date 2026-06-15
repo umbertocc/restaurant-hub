@@ -32,31 +32,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            if (token.isBlank()) {
-                rejectUnauthorized(response, "Token mancante");
-                return;
-            }
-
-            try {
-                if (!jwtUtil.isTokenValid(token)) {
-                    rejectUnauthorized(response, "Token non valido o scaduto");
-                    return;
+            if (!token.isBlank()) {
+                try {
+                    if (jwtUtil.isTokenValid(token)) {
+                        String username = jwtUtil.extractUsername(token);
+                        String role = jwtUtil.extractRole(token);
+                        Long ristoranteId = jwtUtil.extractRistoranteId(token);
+                        if (ristoranteId != null) {
+                            request.setAttribute("ristoranteId", ristoranteId);
+                        }
+                        var auth = new UsernamePasswordAuthenticationToken(
+                                username, null,
+                                List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                        );
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    }
+                    // Token non valido/scaduto: non imposta autenticazione, ma lascia
+                    // proseguire la chain — Spring Security deciderà se l'endpoint è pubblico.
+                } catch (Exception ex) {
+                    // Stesso comportamento: token malformato non blocca gli endpoint pubblici.
                 }
-
-                String username = jwtUtil.extractUsername(token);
-                String role = jwtUtil.extractRole(token);
-                Long ristoranteId = jwtUtil.extractRistoranteId(token);
-                if (ristoranteId != null) {
-                    request.setAttribute("ristoranteId", ristoranteId);
-                }
-                var auth = new UsernamePasswordAuthenticationToken(
-                        username, null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + role))
-                );
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            } catch (Exception ex) {
-                rejectUnauthorized(response, "Token non valido o scaduto");
-                return;
             }
         }
         filterChain.doFilter(request, response);
