@@ -20,6 +20,9 @@ public class NotificaService {
     @Value("${spring.mail.username}")
     private String mittente;
 
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
     public NotificaService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
@@ -30,7 +33,7 @@ public class NotificaService {
         msg.setFrom(mittente);
         msg.setTo(ristorante.getEmail());
         msg.setSubject("Reset password Restaurant Hub");
-        String resetUrl = "https://restaurant-hub/reset-password?token=" + token;
+        String resetUrl = frontendUrl + "/reset-password?token=" + token;
         msg.setText(
             "Hai richiesto il reset della password.\n" +
             "Clicca sul link seguente per impostare una nuova password (valido 30 minuti):\n" +
