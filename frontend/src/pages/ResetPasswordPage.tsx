@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import client from '../api/client';
 
 export default function ResetPasswordPage() {
   const params = new URLSearchParams(window.location.search);
@@ -15,7 +15,7 @@ export default function ResetPasswordPage() {
     setError('');
     setSuccess('');
     try {
-      await axios.post('/api/auth/reset-password', { token, newPassword });
+      await client.post('/auth/reset-password', { token, newPassword });
       setSuccess('Password aggiornata con successo! Ora puoi accedere.');
     } catch (err: any) {
       setError(err?.response?.data?.error || 'Errore durante il reset.');

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import client from '../api/client';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -13,7 +13,7 @@ export default function ForgotPasswordPage() {
     setError('');
     setSuccess('');
     try {
-      await axios.post('/api/auth/forgot-password', { email });
+      await client.post('/auth/forgot-password', { email });
       setSuccess('Se l’email esiste riceverai istruzioni per il reset.');
     } catch (err: any) {
       setError(err?.response?.data?.error || 'Errore durante la richiesta.');
