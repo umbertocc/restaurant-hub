@@ -39,6 +39,7 @@ jobs:
         working-directory: frontend
         env:
           VITE_API_URL: https://restaurant-hub-993653817397.europe-west8.run.app
+          VITE_BASE_PATH: /restaurant-hub/
 
       - name: Add 404.html for React Router
         run: cp frontend/dist/index.html frontend/dist/404.html
