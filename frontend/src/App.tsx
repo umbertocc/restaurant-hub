@@ -1,8 +1,9 @@
 import ResetPasswordPage from './pages/ResetPasswordPage';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute, { SuperadminRoute } from './components/ProtectedRoute';
 import Layout from './components/Layout';
+import RouteMeta from './components/RouteMeta';
 
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -27,10 +28,23 @@ import PrivacyPage from './pages/PrivacyPage';
 import TerminiPage from './pages/TerminiPage';
 import BillingPage from './pages/BillingPage';
 
+// Alla radice i visitatori non autenticati vedono la landing pubblica.
+function RootLayout() {
+  const { isAuthenticated } = useAuth();
+  const { pathname } = useLocation();
+  if (!isAuthenticated && pathname === '/') return <LandingPage />;
+  return (
+    <ProtectedRoute>
+      <Layout />
+    </ProtectedRoute>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
+        <RouteMeta />
         <Routes>
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
@@ -44,14 +58,7 @@ export default function App() {
           <Route path="/tavolo/:ristoranteId/:tavoloId" element={<PublicTavoloPage />} />
 
           {/* Protected */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
+          <Route path="/" element={<RootLayout />}>
             <Route index element={<DashboardPage />} />
             <Route path="menu" element={<MenuPage />} />
             <Route path="ordini" element={<OrdiniPage />} />
