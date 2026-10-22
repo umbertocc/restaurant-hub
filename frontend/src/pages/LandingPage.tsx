@@ -9,12 +9,12 @@ const highlights = [
   {
     title: 'Menu digitale direttamente sui tavoli',
     description:
-      'Ogni tavolo puo avere il suo menu digitale con QR code: i clienti consultano piatti, prezzi e allergeni in autonomia.',
+      'Ogni tavolo può avere il suo menu digitale con QR code: i clienti consultano piatti, prezzi e allergeni in autonomia.',
   },
   {
     title: 'Prenotazioni smart e tavoli sempre sotto controllo',
     description:
-      'Gestisci disponibilita, turni e capienza con una vista chiara, pensata per le ore di punta.',
+      'Gestisci disponibilità, turni e capienza con una vista chiara, pensata per le ore di punta.',
   },
   {
     title: 'Dashboard operativa per chi decide',
@@ -25,7 +25,7 @@ const highlights = [
 
 const stats = [
   { value: '35%', label: 'tempi morti ridotti nei momenti critici' },
-  { value: '2x', label: 'piu velocita nel passaggio sala-cucina' },
+  { value: '2x', label: 'più velocità nel passaggio sala-cucina' },
   { value: '24/7', label: 'monitoraggio operativo multi-ruolo' },
 ];
 
@@ -55,7 +55,7 @@ export default function LandingPage() {
             La regia digitale per ristoranti che non si fermano mai.
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#5a443a]">
-            Dalla comanda al tavolo, coordina ogni reparto con una piattaforma unica e imposta anche il menu digitale ai tavoli. Piu ritmo nel servizio, meno stress nel team.
+            Dalla comanda al tavolo, coordina ogni reparto con una piattaforma unica e imposta anche il menu digitale ai tavoli. Più ritmo nel servizio, meno stress nel team.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -83,7 +83,7 @@ export default function LandingPage() {
             </div>
             <div className="rounded-2xl border border-[#f3d8bd] bg-white p-4">
               <p className="text-sm font-semibold text-[#8a3f20]">Cucina</p>
-              <p className="mt-2 text-sm text-[#60463b]">Priorita chiare e stato ordini in tempo reale.</p>
+              <p className="mt-2 text-sm text-[#60463b]">Priorità chiare e stato ordini in tempo reale.</p>
             </div>
             <div className="rounded-2xl border border-[#f3d8bd] bg-white p-4">
               <p className="text-sm font-semibold text-[#8a3f20]">Sala</p>
@@ -95,7 +95,7 @@ export default function LandingPage() {
             </div>
             <div className="rounded-2xl border border-[#f3d8bd] bg-white p-4">
               <p className="text-sm font-semibold text-[#8a3f20]">Manager</p>
-              <p className="mt-2 text-sm text-[#60463b]">Visione completa su operativita e performance.</p>
+              <p className="mt-2 text-sm text-[#60463b]">Visione completa su operatività e performance.</p>
             </div>
           </div>
         </div>
