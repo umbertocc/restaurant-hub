@@ -47,7 +47,7 @@ export function startOrdersRealtime(args: {
 
   const client = new Client({
     brokerURL,
-    reconnectDelay: 5000,
+    reconnectDelay: 300000,
     connectHeaders: {
       Authorization: `Bearer ${token}`,
     },
