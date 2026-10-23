@@ -29,4 +29,4 @@ jobs:
             --allow-unauthenticated \
             --memory 512Mi \
             --port 8080 \
-            --set-env-vars "DB_URL=${{ secrets.DB_URL }},DB_USERNAME=${{ secrets.DB_USERNAME }},DB_PASSWORD=${{ secrets.DB_PASSWORD }},JWT_SECRET=${{ secrets.JWT_SECRET }},REGISTRATION_CODE=${{ secrets.REGISTRATION_CODE }}"
+            --update-env-vars "DB_URL=${{ secrets.DB_URL }},DB_USERNAME=${{ secrets.DB_USERNAME }},DB_PASSWORD=${{ secrets.DB_PASSWORD }},JWT_SECRET=${{ secrets.JWT_SECRET }},REGISTRATION_CODE=${{ secrets.REGISTRATION_CODE }}, APP_BILLING_STRIPE_SECRET_KEY=${{ secrets.APP_BILLING_STRIPE_SECRET_KEY }}, APP_BILLING_STRIPE_WEBHOOK_SECRET=${{ secrets.APP_BILLING_STRIPE_WEBHOOK_SECRET }}, APP_BILLING_STRIPE_PRICE_PRO_MONTHLY=${{ secrets.APP_BILLING_STRIPE_PRICE_PRO_MONTHLY }}"
