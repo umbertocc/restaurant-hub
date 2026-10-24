@@ -15,6 +15,9 @@ public interface OrdineRepository extends JpaRepository<Ordine, UUID> {
 
     @EntityGraph(attributePaths = "items")
     List<Ordine> findByRistoranteId(Long ristoranteId);
+    @EntityGraph(attributePaths = "items")
     List<Ordine> findByTavoloIdAndStato(Long tavoloId, Stato stato);
+
+    @EntityGraph(attributePaths = "items")
     Optional<Ordine> findFirstByTavoloIdAndStato(Long tavoloId, Stato stato);
 }
