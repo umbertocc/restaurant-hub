@@ -49,11 +49,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return stored ? JSON.parse(stored) : [];
   });
   const [newOrderAlert, setNewOrderAlert] = useState(false);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [profilo, setProfiloState] = useState<Profilo>(
     () => (localStorage.getItem('rh_profilo') as Profilo) ?? 'admin'
   );
   const audioCtxRef = useRef<AudioContext | null>(null);
   const lastBeepAtRef = useRef(0);
+
+  useEffect(() => {
+    const updateCurrentTime = () => setCurrentTime(Date.now());
+    const intervalId = window.setInterval(updateCurrentTime, 60_000);
+    window.addEventListener('focus', updateCurrentTime);
+    document.addEventListener('visibilitychange', updateCurrentTime);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', updateCurrentTime);
+      document.removeEventListener('visibilitychange', updateCurrentTime);
+    };
+  }, []);
 
   const setProfilo = useCallback((p: Profilo) => {
     localStorage.setItem('rh_profilo', p);
@@ -168,17 +182,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (ristorante?.subscriptionStatus === 'ACTIVE_PAID') return null;
     const trialEnd = ristorante?.trialEndAt;
     if (!trialEnd) return null;
-    const diffMs = new Date(trialEnd).getTime() - Date.now();
+    const diffMs = new Date(trialEnd).getTime() - currentTime;
     return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-  }, [ristorante?.subscriptionStatus, ristorante?.trialEndAt]);
+  }, [currentTime, ristorante?.subscriptionStatus, ristorante?.trialEndAt]);
 
   const trialExpired = useMemo(() => {
     if (ristorante?.subscriptionStatus === 'ACTIVE_PAID') return false;
     if (ristorante?.subscriptionStatus === 'EXPIRED_TRIAL') return true;
     if (typeof ristorante?.trialExpired === 'boolean') return ristorante.trialExpired;
     if (!ristorante?.trialEndAt) return false;
-    return new Date(ristorante.trialEndAt).getTime() <= Date.now();
-  }, [ristorante?.subscriptionStatus, ristorante?.trialExpired, ristorante?.trialEndAt]);
+    return new Date(ristorante.trialEndAt).getTime() <= currentTime;
+  }, [currentTime, ristorante?.subscriptionStatus, ristorante?.trialExpired, ristorante?.trialEndAt]);
 
   return (
     <AuthContext.Provider

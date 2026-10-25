@@ -3,6 +3,8 @@ package com.example.restaurant.subscription;
 import com.example.restaurant.cloud.CloudClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -10,7 +12,9 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -21,6 +25,10 @@ public class SubscriptionGate {
 
     public static final String TRIAL_EXPIRED = "TRIAL_EXPIRED";
     public static final String SUBSCRIPTION_UNVERIFIED = "SUBSCRIPTION_UNVERIFIED";
+
+    private static final Logger log = LoggerFactory.getLogger(SubscriptionGate.class);
+    private static final Set<String> KNOWN_STATUSES = Set.of(
+            "TRIAL_ACTIVE", "TRIAL_GRACE", "EXPIRED_TRIAL", "ACTIVE_PAID", "CANCELED");
 
     private record Entry(boolean blocked, Instant fetchedAt) {}
 
@@ -63,6 +71,18 @@ public class SubscriptionGate {
         }
     }
 
+    public void refreshFromBillingStatus(String email, byte[] body) {
+        try {
+            JsonNode json = mapper.readTree(body);
+            if (json == null || !KNOWN_STATUSES.contains(json.path("subscriptionStatus").asText(""))) {
+                return;
+            }
+            cache.put(email, new Entry(isBlocked(json), Instant.now()));
+        } catch (java.io.IOException | DateTimeParseException e) {
+            log.warn("Impossibile aggiornare la cache abbonamento dalla risposta cloud", e);
+        }
+    }
+
     private boolean fetchBlocked(String bearerToken) throws Exception {
         HttpResponse<byte[]> response = cloud.send("GET", "/api/billing/status",
                 Map.of("Authorization", "Bearer " + bearerToken, "Accept", "application/json"), null);
@@ -70,6 +90,10 @@ public class SubscriptionGate {
             throw new IllegalStateException("HTTP " + response.statusCode());
         }
         JsonNode json = mapper.readTree(response.body());
+        return isBlocked(json);
+    }
+
+    private boolean isBlocked(JsonNode json) {
         String status = json.path("subscriptionStatus").asText("");
         String trialEnd = json.path("trialEndAt").asText("");
         if ("ACTIVE_PAID".equals(status) || trialEnd.isBlank() || "null".equals(trialEnd)) {

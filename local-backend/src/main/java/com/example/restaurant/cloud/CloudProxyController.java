@@ -1,11 +1,14 @@
 package com.example.restaurant.cloud;
 
+import com.example.restaurant.subscription.SubscriptionGate;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,9 +30,11 @@ public class CloudProxyController {
     };
 
     private final CloudClient cloud;
+    private final SubscriptionGate subscriptionGate;
 
-    public CloudProxyController(CloudClient cloud) {
+    public CloudProxyController(CloudClient cloud, SubscriptionGate subscriptionGate) {
         this.cloud = cloud;
+        this.subscriptionGate = subscriptionGate;
     }
 
     @RequestMapping({"/api/auth/**", "/api/ristoranti", "/api/ristoranti/**", "/api/billing/**"})
@@ -47,6 +52,12 @@ public class CloudProxyController {
 
         try {
             HttpResponse<byte[]> response = cloud.send(request.getMethod(), target, headers, body);
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (request.getRequestURI().startsWith("/api/billing/")
+                    && response.statusCode() >= 200 && response.statusCode() < 300
+                    && authentication != null && authentication.getPrincipal() instanceof String email) {
+                subscriptionGate.refreshFromBillingStatus(email, response.body());
+            }
             ResponseEntity.BodyBuilder out = ResponseEntity.status(response.statusCode());
             response.headers().firstValue(HttpHeaders.CONTENT_TYPE)
                     .ifPresent(v -> out.header(HttpHeaders.CONTENT_TYPE, v));
