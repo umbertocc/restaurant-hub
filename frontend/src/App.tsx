@@ -57,7 +57,7 @@ export default function App() {
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/termini" element={<TerminiPage />} />
           <Route path="/prenota/:ristoranteId" element={<PublicPrenotazionePage />} />
-          <Route path="/r/:slug" element={<PublicSitoPage />} />
+          <Route path="/ristoranti/:slug" element={<PublicSitoPage />} />
           <Route path="/tavolo/:ristoranteId/:tavoloId" element={<PublicTavoloPage />} />
 
           {/* Protected */}

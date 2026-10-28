@@ -66,7 +66,7 @@ export default function SitoPage() {
 
   const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   const slug = (form.slug ?? '').trim().toLowerCase();
-  const publicUrl = slug ? `${window.location.origin}${base}/r/${slug}` : '';
+  const publicUrl = slug ? `${window.location.origin}${base}/ristoranti/${slug}` : '';
 
   if (loading) return <div className="p-6 text-gray-500">Caricamento…</div>;
 

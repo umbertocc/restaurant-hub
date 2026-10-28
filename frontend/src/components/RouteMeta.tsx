@@ -62,7 +62,7 @@ export default function RouteMeta() {
     const page = PUBLIC_PAGES[normalized];
 
     // Siti pubblici dei ristoranti: indicizzabili; il titolo lo imposta la pagina dopo il caricamento.
-    if (!page && normalized.startsWith('/r/')) {
+    if (!page && normalized.startsWith('/ristoranti/')) {
       setMeta('meta[name="robots"]', 'name', 'robots', 'index, follow');
       setCanonical(`${SITE_URL}${normalized}`);
       return;

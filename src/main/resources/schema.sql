@@ -28,7 +28,7 @@ ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS subscription_cancel_a
 ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS trial_grace_end_at TIMESTAMPTZ;
 ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS trial_last_notified_day INT;
 
--- Sito pubblico del ristorante (pagina /r/{slug})
+-- Sito pubblico del ristorante (pagina /ristoranti/{slug})
 ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS slug VARCHAR(50);
 ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS descrizione VARCHAR(2000);
 ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS orari VARCHAR(1000);

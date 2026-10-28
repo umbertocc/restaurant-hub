@@ -27,7 +27,7 @@ public class Ristorante {
     private String citta;
     private String logoUrl;
 
-    // Sito pubblico del ristorante (pagina /r/{slug})
+    // Sito pubblico del ristorante (pagina /ristoranti/{slug})
     @Column(unique = true)
     private String slug;
 
