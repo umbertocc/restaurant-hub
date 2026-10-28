@@ -27,6 +27,8 @@ import LandingPage from './pages/LandingPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TerminiPage from './pages/TerminiPage';
 import BillingPage from './pages/BillingPage';
+import SitoPage from './pages/SitoPage';
+import PublicSitoPage from './pages/PublicSitoPage';
 
 // Alla radice i visitatori non autenticati vedono la landing pubblica.
 function RootLayout() {
@@ -55,6 +57,7 @@ export default function App() {
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/termini" element={<TerminiPage />} />
           <Route path="/prenota/:ristoranteId" element={<PublicPrenotazionePage />} />
+          <Route path="/r/:slug" element={<PublicSitoPage />} />
           <Route path="/tavolo/:ristoranteId/:tavoloId" element={<PublicTavoloPage />} />
 
           {/* Protected */}
@@ -71,6 +74,7 @@ export default function App() {
             <Route path="pizzeria" element={<PizzeriaPage />} />
             <Route path="sala" element={<CamerierePage />} />
             <Route path="profilo" element={<ProfiloPage />} />
+            <Route path="sito" element={<SitoPage />} />
             <Route path="abbonamento" element={<BillingPage />} />
           </Route>
 

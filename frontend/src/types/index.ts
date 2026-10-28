@@ -29,6 +29,42 @@ export interface Ristorante {
   createdAt: string;
 }
 
+// ── Sito pubblico ────────────────────────────────────────────────────────────
+export interface SitoConfig {
+  slug?: string | null;
+  descrizione?: string | null;
+  orari?: string | null;
+  copertinaUrl?: string | null;
+  instagramUrl?: string | null;
+  facebookUrl?: string | null;
+  sitoPubblicato: boolean;
+}
+
+export interface PublicSitoVoce {
+  id: number;
+  nome: string;
+  descrizione?: string;
+  categoria: CategoriaMenu;
+  prezzo: number;
+  immagineUrl?: string;
+  allergeni?: string;
+}
+
+export interface PublicSito {
+  ristoranteId: number;
+  nome: string;
+  descrizione?: string;
+  indirizzo?: string;
+  citta?: string;
+  telefono?: string;
+  orari?: string;
+  logoUrl?: string;
+  copertinaUrl?: string;
+  instagramUrl?: string;
+  facebookUrl?: string;
+  menu: PublicSitoVoce[];
+}
+
 // ── Tavoli ───────────────────────────────────────────────────────────────────
 export interface Tavolo {
   id: number;

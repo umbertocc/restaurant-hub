@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/menu").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/abbinamenti/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/ristoranti/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/ordini").permitAll()
                 // Handshake WebSocket (auth applicata su STOMP CONNECT)
                 .requestMatchers("/ws/**").permitAll()

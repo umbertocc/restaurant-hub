@@ -61,6 +61,13 @@ export default function RouteMeta() {
     const normalized = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
     const page = PUBLIC_PAGES[normalized];
 
+    // Siti pubblici dei ristoranti: indicizzabili; il titolo lo imposta la pagina dopo il caricamento.
+    if (!page && normalized.startsWith('/r/')) {
+      setMeta('meta[name="robots"]', 'name', 'robots', 'index, follow');
+      setCanonical(`${SITE_URL}${normalized}`);
+      return;
+    }
+
     if (page) {
       const url = `${SITE_URL}${page.canonicalPath}`;
       document.title = page.title;

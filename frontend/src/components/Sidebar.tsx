@@ -15,6 +15,7 @@ import {
   GlassWater,
   Pizza,
   CreditCard,
+  Globe,
 } from 'lucide-react';
 import { useAuth, Profilo } from '../context/AuthContext';
 
@@ -30,6 +31,7 @@ const ALL_NAV_ITEMS: { path: string; label: string; icon: React.ElementType; pro
   { path: '/pizzeria',     label: 'Pizzeria',     icon: Pizza,           profili: ['admin', 'pizzaiolo'] },
   { path: '/sala',         label: 'Sala',         icon: Utensils,        profili: ['admin', 'cameriere'] },
   { path: '/profilo',      label: 'Profilo',      icon: Settings,        profili: ['admin'] },
+  { path: '/sito',         label: 'Sito web',     icon: Globe,           profili: ['admin'] },
   { path: '/abbonamento',  label: 'Abbonamento',  icon: CreditCard,      profili: ['admin'] },
 ];
 

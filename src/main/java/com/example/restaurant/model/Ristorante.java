@@ -27,6 +27,23 @@ public class Ristorante {
     private String citta;
     private String logoUrl;
 
+    // Sito pubblico del ristorante (pagina /r/{slug})
+    @Column(unique = true)
+    private String slug;
+
+    @Column(length = 2000)
+    private String descrizione;
+
+    @Column(length = 1000)
+    private String orari;
+
+    private String copertinaUrl;
+    private String instagramUrl;
+    private String facebookUrl;
+
+    @Column(name = "sito_pubblicato", nullable = false)
+    private Boolean sitoPubblicato = false;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Piano piano = Piano.FREE;
@@ -104,6 +121,27 @@ public class Ristorante {
 
     public String getLogoUrl() { return logoUrl; }
     public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
+
+    public String getSlug() { return slug; }
+    public void setSlug(String slug) { this.slug = slug; }
+
+    public String getDescrizione() { return descrizione; }
+    public void setDescrizione(String descrizione) { this.descrizione = descrizione; }
+
+    public String getOrari() { return orari; }
+    public void setOrari(String orari) { this.orari = orari; }
+
+    public String getCopertinaUrl() { return copertinaUrl; }
+    public void setCopertinaUrl(String copertinaUrl) { this.copertinaUrl = copertinaUrl; }
+
+    public String getInstagramUrl() { return instagramUrl; }
+    public void setInstagramUrl(String instagramUrl) { this.instagramUrl = instagramUrl; }
+
+    public String getFacebookUrl() { return facebookUrl; }
+    public void setFacebookUrl(String facebookUrl) { this.facebookUrl = facebookUrl; }
+
+    public Boolean getSitoPubblicato() { return sitoPubblicato; }
+    public void setSitoPubblicato(Boolean sitoPubblicato) { this.sitoPubblicato = sitoPubblicato; }
 
     public Piano getPiano() { return piano; }
     public void setPiano(Piano piano) { this.piano = piano; }

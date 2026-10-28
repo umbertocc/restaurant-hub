@@ -28,6 +28,16 @@ ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS subscription_cancel_a
 ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS trial_grace_end_at TIMESTAMPTZ;
 ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS trial_last_notified_day INT;
 
+-- Sito pubblico del ristorante (pagina /r/{slug})
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS slug VARCHAR(50);
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS descrizione VARCHAR(2000);
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS orari VARCHAR(1000);
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS copertina_url VARCHAR(500);
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS instagram_url VARCHAR(500);
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS facebook_url VARCHAR(500);
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS sito_pubblicato BOOLEAN NOT NULL DEFAULT FALSE;
+CREATE UNIQUE INDEX IF NOT EXISTS uk_ristoranti_slug ON restaurant.ristoranti(slug) WHERE slug IS NOT NULL;
+
 -- Normalizza eventuali dati legacy: il piano ENTERPRISE non e piu supportato.
 UPDATE restaurant.ristoranti
 SET piano = 'PRO'

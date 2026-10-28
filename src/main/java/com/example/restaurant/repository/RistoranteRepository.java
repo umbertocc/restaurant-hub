@@ -12,6 +12,8 @@ public interface RistoranteRepository extends JpaRepository<Ristorante, Long> {
     Optional<Ristorante> findByStripeSubscriptionId(String stripeSubscriptionId);
     Optional<Ristorante> findByStripeCustomerId(String stripeCustomerId);
     boolean existsByEmail(String email);
+    Optional<Ristorante> findBySlug(String slug);
+    boolean existsBySlugAndIdNot(String slug, Long id);
     List<Ristorante> findByTrialEndAtIsNotNullAndSubscriptionStatusIn(List<Ristorante.SubscriptionStatus> statuses);
     List<Ristorante> findBySubscriptionStatusAndTrialGraceEndAtBefore(Ristorante.SubscriptionStatus status, OffsetDateTime now);
 }
