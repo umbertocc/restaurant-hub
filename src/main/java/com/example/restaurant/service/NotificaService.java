@@ -46,8 +46,8 @@ public class NotificaService {
     @Async
     public void notificaNuovaRegistrazione(Ristorante ristorante) {
         SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setFrom("info@torrepalivacanze.it");
-        msg.setTo("info@torrepalivacanze.it");
+        msg.setFrom("info@restaurant-hub.it");
+        msg.setTo("info@restaurant-hub.it");
         msg.setSubject("Nuovo ristorante registrato: " + ristorante.getNome());
         msg.setText(
             "Un nuovo ristorante si è registrato su Restaurant Hub.\n\n" +
@@ -61,7 +61,7 @@ public class NotificaService {
         );
         try {
             mailSender.send(msg);
-            logger.info("[EMAIL] Notifica nuova registrazione inviata con successo a info@torrepalivacanze.it");
+            logger.info("[EMAIL] Notifica nuova registrazione inviata con successo a info@restaurant-hub.it");
         } catch (Exception e) {
             logger.error("[EMAIL] Errore invio notifica nuova registrazione: {}", e.getMessage(), e);
         }

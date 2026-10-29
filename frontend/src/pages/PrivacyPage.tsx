@@ -40,7 +40,7 @@ export default function PrivacyPage() {
 
           <h2 className="text-lg font-semibold text-[#2f1d14]">5. Contatti privacy</h2>
           <p>
-            Per richieste privacy puoi scrivere a <a className="text-[#8f3a19] underline" href="mailto:info@restauranthub.it">info@restauranthub.it</a>.
+            Per richieste privacy puoi scrivere a <a className="text-[#8f3a19] underline" href="mailto:info@restaurant-hub.it">info@restaurant-hub.it</a>.
           </p>
         </section>
 

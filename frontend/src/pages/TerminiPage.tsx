@@ -39,7 +39,7 @@ export default function TerminiPage() {
 
           <h2 className="text-lg font-semibold text-[#2f1d14]">5. Supporto</h2>
           <p>
-            Per supporto commerciale o tecnico: <a className="text-[#8f3a19] underline" href="mailto:info@restauranthub.it">info@restauranthub.it</a>.
+            Per supporto commerciale o tecnico: <a className="text-[#8f3a19] underline" href="mailto:info@restaurant-hub.it">info@restaurant-hub.it</a>.
           </p>
         </section>
 

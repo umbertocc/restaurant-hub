@@ -32,7 +32,7 @@ const stats = [
 const contact = {
   phoneDisplay: '+39 380 458 0135',
   phoneHref: 'tel:+393804580135',
-  email: 'info@restauranthub.it',
+  email: 'info@restaurant-hub.it',
   whatsappDisplay: '+39 380 458 0135',
   whatsappHref: 'https://wa.me/393804580135',
 };
