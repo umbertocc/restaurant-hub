@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-const SITE_URL = 'https://demo.restaurant-hub.it';
+const SITE_URL = 'https://restaurant-hub.it';
 
 interface PageMeta {
   title: string;
