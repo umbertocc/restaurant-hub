@@ -9,8 +9,8 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
 }
 
 export function SuperadminRoute({ children }: { children: ReactNode }) {
-  const { isAuthenticated, ruoli } = useAuth();
+  const { isAuthenticated, ruoli, profiloBloccato } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (!ruoli.includes('superadmin')) return <Navigate to="/" replace />;
+  if (profiloBloccato || !ruoli.includes('superadmin')) return <Navigate to="/" replace />;
   return <>{children}</>;
 }

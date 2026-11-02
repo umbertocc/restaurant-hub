@@ -35,9 +35,11 @@ export function stopOrdersRealtime(): void {
 export function startOrdersRealtime(args: {
   token: string;
   ristoranteId: number;
+  dispositivoId?: number | null;
   onOrderChanged?: (payload: OrdineRealtimeMessage) => void;
+  onForceLogout?: () => void;
 }): void {
-  const { token, ristoranteId, onOrderChanged } = args;
+  const { token, ristoranteId, dispositivoId, onOrderChanged, onForceLogout } = args;
 
   stopOrdersRealtime();
 
@@ -52,6 +54,15 @@ export function startOrdersRealtime(args: {
       Authorization: `Bearer ${token}`,
     },
     onConnect: () => {
+      if (dispositivoId && onForceLogout) {
+        client.subscribe(`/topic/dispositivo.${dispositivoId}.logout`, (frame) => {
+          try {
+            if (JSON.parse(frame.body)?.type === 'FORCE_LOGOUT') onForceLogout();
+          } catch {
+            // messaggio non valido: ignorato
+          }
+        });
+      }
       client.subscribe(destination, (frame) => {
         let payload: OrdineRealtimeMessage | null = null;
         try {

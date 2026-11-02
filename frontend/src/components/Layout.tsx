@@ -1,13 +1,19 @@
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { useAuth } from '../context/AuthContext';
+import { PROFILO_HOME, profiloPuoAprire } from '../constants/profili';
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { newOrderAlert, dismissOrderAlert, trialExpired, trialDaysLeft } = useAuth();
+  const { newOrderAlert, dismissOrderAlert, trialExpired, trialDaysLeft, profilo } = useAuth();
+  const { pathname } = useLocation();
+
+  if (!profiloPuoAprire(profilo, pathname)) {
+    return <Navigate to={PROFILO_HOME[profilo]} replace />;
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">

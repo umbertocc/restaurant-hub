@@ -29,6 +29,7 @@ import TerminiPage from './pages/TerminiPage';
 import BillingPage from './pages/BillingPage';
 import SitoPage from './pages/SitoPage';
 import PublicSitoPage from './pages/PublicSitoPage';
+import DispositiviPage from './pages/DispositiviPage';
 
 // Alla radice i visitatori non autenticati vedono la landing pubblica.
 function RootLayout() {
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="profilo" element={<ProfiloPage />} />
             <Route path="sito" element={<SitoPage />} />
             <Route path="abbonamento" element={<BillingPage />} />
+            <Route path="dispositivi" element={<DispositiviPage />} />
           </Route>
 
           {/* Superadmin only */}

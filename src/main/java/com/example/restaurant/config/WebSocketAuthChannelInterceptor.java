@@ -1,5 +1,6 @@
 package com.example.restaurant.config;
 
+import com.example.restaurant.service.DispositivoAccessService;
 import com.example.restaurant.util.JwtUtil;
 import org.springframework.lang.NonNull;
 import org.springframework.messaging.Message;
@@ -22,11 +23,14 @@ import java.util.regex.Pattern;
 public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
 
     private static final Pattern ORDINI_TOPIC = Pattern.compile("^/topic/ristorante\\.(\\d+)\\.ordini$");
+    private static final Pattern LOGOUT_TOPIC = Pattern.compile("^/topic/dispositivo\\.(\\d+)\\.logout$");
 
     private final JwtUtil jwtUtil;
+    private final DispositivoAccessService accessService;
 
-    public WebSocketAuthChannelInterceptor(JwtUtil jwtUtil) {
+    public WebSocketAuthChannelInterceptor(JwtUtil jwtUtil, DispositivoAccessService accessService) {
         this.jwtUtil = jwtUtil;
+        this.accessService = accessService;
     }
 
     @Override
@@ -67,6 +71,10 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
         if (ristoranteId == null) {
             throw new AccessDeniedException("ristoranteId assente nel token");
         }
+        Long dispositivoId = jwtUtil.extractDispositivoId(token);
+        if (!accessService.isAttivo(dispositivoId, ristoranteId)) {
+            throw new AccessDeniedException("Dispositivo bloccato o revocato");
+        }
 
         var auth = new UsernamePasswordAuthenticationToken(
                 username,
@@ -78,6 +86,9 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
         Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
         if (sessionAttributes != null) {
             sessionAttributes.put("ristoranteId", ristoranteId);
+            if (dispositivoId != null) {
+                sessionAttributes.put("dispositivoId", dispositivoId);
+            }
         }
     }
 
@@ -85,6 +96,16 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
         String destination = accessor.getDestination();
         if (destination == null) {
             throw new AccessDeniedException("Destinazione subscribe mancante");
+        }
+
+        Matcher logout = LOGOUT_TOPIC.matcher(destination);
+        if (logout.matches()) {
+            Map<String, Object> attrs = accessor.getSessionAttributes();
+            Object own = attrs == null ? null : attrs.get("dispositivoId");
+            if (own == null || !String.valueOf(own).equals(logout.group(1))) {
+                throw new AccessDeniedException("Subscribe non autorizzata per questo dispositivo");
+            }
+            return;
         }
 
         Matcher matcher = ORDINI_TOPIC.matcher(destination);

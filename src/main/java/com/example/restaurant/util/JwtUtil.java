@@ -26,6 +26,7 @@ public class JwtUtil {
 
     private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
     private static final long EXPIRATION_MS = 86400000L; // 24 ore
+    private static final long DEVICE_EXPIRATION_MS = 365L * 24 * 60 * 60 * 1000;
 
     // Chiave privata RSA in formato PKCS#8 (base64 o PEM). Resta solo sul cloud.
     @Value("${jwt.private-key:}")
@@ -65,6 +66,34 @@ public class JwtUtil {
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
                 .signWith(SignatureAlgorithm.RS256, privateKey)
                 .compact();
+    }
+
+    // Token di un dispositivo attivato: limita l'accesso al profilo operativo del dispositivo
+    public String generateDeviceToken(String username, Long ristoranteId, String profilo, Long dispositivoId) {
+        return Jwts.builder()
+                .setSubject(username)
+                .claim("role", "RISTORANTE")
+                .claim("ristoranteId", ristoranteId)
+                .claim("profilo", profilo)
+                .claim("dispositivoId", dispositivoId)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + DEVICE_EXPIRATION_MS))
+                .signWith(SignatureAlgorithm.RS256, privateKey)
+                .compact();
+    }
+
+    // Assente nei token del login standard: in quel caso vale il profilo admin
+    public String extractProfilo(String token) {
+        Object val = extractClaims(token).get("profilo");
+        return val instanceof String s && !s.isBlank() ? s : "admin";
+    }
+
+    // Assente nei token del login standard
+    public Long extractDispositivoId(String token) {
+        Object val = extractClaims(token).get("dispositivoId");
+        if (val instanceof Integer i) return i.longValue();
+        if (val instanceof Long l) return l;
+        return null;
     }
 
     public Long extractRistoranteId(String token) {

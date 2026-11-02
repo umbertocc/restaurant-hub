@@ -1,5 +1,6 @@
 package com.example.restaurant.filter;
 
+import com.example.restaurant.service.DispositivoAccessService;
 import com.example.restaurant.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,9 +20,11 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final DispositivoAccessService accessService;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, DispositivoAccessService accessService) {
         this.jwtUtil = jwtUtil;
+        this.accessService = accessService;
     }
 
     @Override
@@ -38,12 +41,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         String username = jwtUtil.extractUsername(token);
                         String role = jwtUtil.extractRole(token);
                         Long ristoranteId = jwtUtil.extractRistoranteId(token);
+                        if (!accessService.isAttivo(jwtUtil.extractDispositivoId(token), ristoranteId)) {
+                            rejectUnauthorized(response, "Dispositivo bloccato o revocato");
+                            return;
+                        }
                         if (ristoranteId != null) {
                             request.setAttribute("ristoranteId", ristoranteId);
                         }
                         var auth = new UsernamePasswordAuthenticationToken(
                                 username, null,
-                                List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                                List.of(new SimpleGrantedAuthority("ROLE_" + role),
+                                        new SimpleGrantedAuthority("PROFILO_" + jwtUtil.extractProfilo(token)))
                         );
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     }

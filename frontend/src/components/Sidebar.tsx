@@ -16,8 +16,10 @@ import {
   Pizza,
   CreditCard,
   Globe,
+  Smartphone,
 } from 'lucide-react';
 import { useAuth, Profilo } from '../context/AuthContext';
+import { PROFILO_HOME } from '../constants/profili';
 
 const ALL_NAV_ITEMS: { path: string; label: string; icon: React.ElementType; profili: Profilo[] }[] = [
   { path: '/',             label: 'Dashboard',    icon: LayoutDashboard, profili: ['admin'] },
@@ -33,7 +35,8 @@ const ALL_NAV_ITEMS: { path: string; label: string; icon: React.ElementType; pro
   { path: '/profilo',      label: 'Profilo',      icon: Settings,        profili: ['admin'] },
   { path: '/sito',         label: 'Sito web',     icon: Globe,           profili: ['admin'] },
   { path: '/abbonamento',  label: 'Abbonamento',  icon: CreditCard,      profili: ['admin'] },
-];
+    { path: '/dispositivi',  label: 'Dispositivi',  icon: Smartphone,      profili: ['admin'] },
+  ];
 
 const PROFILI: { value: Profilo; label: string; color: string; activeColor: string }[] = [
   { value: 'admin',     label: 'Admin',     color: 'bg-gray-700 text-gray-200 hover:bg-gray-600', activeColor: 'bg-red-600 text-white' },
@@ -43,22 +46,13 @@ const PROFILI: { value: Profilo; label: string; color: string; activeColor: stri
   { value: 'pizzaiolo', label: 'Pizzaiolo', color: 'bg-gray-700 text-gray-200 hover:bg-gray-600', activeColor: 'bg-amber-600 text-white' },
 ];
 
-// Redirect di default per ogni profilo
-const PROFILO_HOME: Record<Profilo, string> = {
-  admin:     '/',
-  cameriere: '/sala',
-  cuoco:     '/cucina',
-  barista:   '/bar',
-  pizzaiolo: '/pizzeria',
-};
-
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
-  const { ristorante, ruoli, logout, profilo, setProfilo } = useAuth();
+  const { ristorante, ruoli, logout, profilo, setProfilo, profiloBloccato } = useAuth();
   const navigate = useNavigate();
 
 
   const navItems = ALL_NAV_ITEMS.filter((item) => item.profili.includes(profilo));
-  const isSuperadmin = Array.isArray(ruoli) && ruoli.includes('superadmin');
+  const isSuperadmin = !profiloBloccato && Array.isArray(ruoli) && ruoli.includes('superadmin');
 
   const handleSetProfilo = (p: Profilo) => {
     setProfilo(p);
@@ -81,7 +75,8 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         </div>
       </div>
 
-      {/* Selettore profilo */}
+      {/* Selettore profilo (nascosto sui dispositivi attivati con codice) */}
+      {!profiloBloccato && (
       <div className="px-3 pt-3 pb-1">
         <p className="text-xs text-gray-500 uppercase tracking-wider px-1 mb-1.5 flex items-center gap-1">
           <ShieldCheck className="w-3 h-3" /> Vista
@@ -101,6 +96,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
           ))}
         </div>
       </div>
+      )}
 
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">

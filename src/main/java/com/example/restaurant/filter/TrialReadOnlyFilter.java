@@ -39,7 +39,9 @@ public class TrialReadOnlyFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
         // Consenti cambio password anche con trial scaduto.
-        if ("/api/auth/change-password".equals(path)) {
+        if ("/api/auth/change-password".equals(path)
+                || "/api/auth/device-activate".equals(path)
+                || path.contains("/dispositivi")) {
             filterChain.doFilter(request, response);
             return;
         }

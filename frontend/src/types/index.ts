@@ -203,3 +203,25 @@ export interface AuthResponse {
   ristorante: Ristorante;
   ruoli: string[];
 }
+
+// -- Dispositivi --------------------------------------------------------------
+export type RuoloDispositivo = 'admin' | 'cameriere' | 'cuoco' | 'barista' | 'pizzaiolo';
+
+export interface Dispositivo {
+  id: number;
+  ristoranteId: number;
+  nome: string;
+  ruolo: RuoloDispositivo;
+  createdAt: string;
+  lastUsedAt?: string | null;
+  revokedAt?: string | null;
+  bloccatoAt?: string | null;
+  // Presente solo nella risposta di creazione/rigenerazione
+  codice?: string;
+}
+
+export interface DeviceActivationResponse {
+  token: string;
+  profilo: RuoloDispositivo;
+  dispositivo: Dispositivo;
+}

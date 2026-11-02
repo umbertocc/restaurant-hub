@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { getRistoranti, approvaRistorante } from '../api/ristoranti';
+import DispositiviModal from '../components/DispositiviModal';
 
 interface Ristorante {
   id: number;
@@ -15,6 +16,7 @@ export default function AdminRistorantiPage() {
   const [ristoranti, setRistoranti] = useState<Ristorante[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [dispositiviDi, setDispositiviDi] = useState<Ristorante | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -36,7 +38,7 @@ export default function AdminRistorantiPage() {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Gestione Ristoranti</h1>
       {error && <div className="text-red-600 mb-4">{error}</div>}
       <table className="w-full border rounded-xl overflow-hidden bg-white">
@@ -60,7 +62,7 @@ export default function AdminRistorantiPage() {
               <td className="p-2 text-center">
                 {r.attivo ? <CheckCircle className="inline w-5 h-5 text-green-600" /> : <XCircle className="inline w-5 h-5 text-red-500" />}
               </td>
-              <td className="p-2 text-center">
+              <td className="p-2 text-center space-x-2">
                 {!r.attivo && (
                   <button
                     className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
@@ -69,11 +71,24 @@ export default function AdminRistorantiPage() {
                     Approva
                   </button>
                 )}
+                <button
+                  className="bg-gray-800 hover:bg-black text-white px-3 py-1 rounded"
+                  onClick={() => setDispositiviDi(r)}
+                >
+                  Dispositivi
+                </button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      {dispositiviDi && (
+        <DispositiviModal
+          ristoranteId={dispositiviDi.id}
+          ristoranteNome={dispositiviDi.nome}
+          onClose={() => setDispositiviDi(null)}
+        />
+      )}
     </div>
   );
 }

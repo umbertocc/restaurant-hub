@@ -8,6 +8,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [codiceDispositivo, setCodiceDispositivo] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -17,11 +18,15 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login({ email, password });
+      await login({ email, password }, codiceDispositivo);
       navigate('/');
     } catch (err: any) {
       const status = err?.response?.status;
-      if (status === 404) {
+      if (status === 429) {
+        setError('Troppi tentativi con il codice dispositivo. Riprova tra qualche minuto.');
+      } else if (status === 403 && codiceDispositivo.trim() && !err.response?.data?.code) {
+        setError('Codice dispositivo non valido, revocato o bloccato.');
+      } else if (status === 404) {
         setError(
           "L'endpoint /api/auth/login non è ancora implementato nel backend. Implementa AuthController per abilitare il login."
         );
@@ -88,6 +93,21 @@ export default function LoginPage() {
                   {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+            </div>
+
+            <div>
+              <label className="label">Codice dispositivo (opzionale)</label>
+              <input
+                type="text"
+                className="input uppercase tracking-wider"
+                placeholder="XXXX-XXXX-XXXX"
+                value={codiceDispositivo}
+                onChange={(e) => setCodiceDispositivo(e.target.value)}
+                autoComplete="off"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Lascia vuoto per l'accesso amministratore.
+              </p>
             </div>
 
             {error && (

@@ -22,6 +22,9 @@ client.interceptors.response.use(
       if (wwwAuth) {
         localStorage.removeItem('rh_token');
         localStorage.removeItem('rh_ristorante');
+        localStorage.removeItem('rh_ruoli');
+        localStorage.removeItem('rh_device_profilo');
+        localStorage.removeItem('rh_device_id');
         window.location.href = `${import.meta.env.BASE_URL}login`;
       }
     }

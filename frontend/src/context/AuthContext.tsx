@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { Ristorante, LoginRequest } from '../types';
 import { login as apiLogin } from '../api/ristoranti';
+import { attivaDispositivo } from '../api/dispositivi';
 import {
   OrdineRealtimeMessage,
   startOrdersRealtime,
@@ -22,8 +23,9 @@ interface AuthContextValue {
   token: string | null;
   ristorante: Ristorante | null;
   ruoli: string[];
-  login: (data: LoginRequest) => Promise<void>;
+  login: (data: LoginRequest, codiceDispositivo?: string) => Promise<void>;
   logout: () => void;
+  profiloBloccato: boolean;
   refreshRistorante: (r: Ristorante) => void;
   isAuthenticated: boolean;
   newOrderAlert: boolean;
@@ -50,10 +52,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
   const [newOrderAlert, setNewOrderAlert] = useState(false);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
-  const [profilo, setProfiloState] = useState<Profilo>(
+  // Profilo imposto dal codice dispositivo: non modificabile dall'utente
+  const [profiloDispositivo, setProfiloDispositivo] = useState<Profilo | null>(
+    () => localStorage.getItem('rh_device_profilo') as Profilo | null
+  );
+  const [profiloScelto, setProfiloState] = useState<Profilo>(
     () => (localStorage.getItem('rh_profilo') as Profilo) ?? 'admin'
   );
+  const profilo: Profilo = profiloDispositivo ?? profiloScelto;
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const logoutRef = useRef<() => void>(() => {});
   const lastBeepAtRef = useRef(0);
 
   useEffect(() => {
@@ -70,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setProfilo = useCallback((p: Profilo) => {
+    if (localStorage.getItem('rh_device_profilo')) return;
     localStorage.setItem('rh_profilo', p);
     setProfiloState(p);
   }, []);
@@ -143,7 +152,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     startOrdersRealtime({
       token,
       ristoranteId,
+      dispositivoId: Number(localStorage.getItem('rh_device_id')) || null,
       onOrderChanged: handleOrderChanged,
+      onForceLogout: () => {
+        logoutRef.current();
+        window.location.href = `${import.meta.env.BASE_URL}login`;
+      },
     });
 
     return () => {
@@ -151,8 +165,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [token, ristorante?.id, handleOrderChanged]);
 
-  const login = useCallback(async (data: LoginRequest) => {
+  const login = useCallback(async (data: LoginRequest, codiceDispositivo?: string) => {
     const response = await apiLogin(data);
+    let deviceProfilo: Profilo | null = null;
+    let deviceId: number | null = null;
+    if (codiceDispositivo?.trim()) {
+      // Se il codice e' errato o revocato l'errore risale al chiamante e il login non viene completato
+      const activation = await attivaDispositivo(codiceDispositivo.trim(), response.token);
+      response.token = activation.token;
+      deviceProfilo = activation.profilo as Profilo;
+      deviceId = activation.dispositivo?.id ?? null;
+    }
+    if (deviceProfilo) {
+      localStorage.setItem('rh_device_profilo', deviceProfilo);
+      localStorage.setItem('rh_profilo', deviceProfilo);
+      if (deviceId) localStorage.setItem('rh_device_id', String(deviceId));
+    } else {
+      localStorage.removeItem('rh_device_profilo');
+      localStorage.removeItem('rh_device_id');
+      localStorage.setItem('rh_profilo', 'admin');
+    }
+    setProfiloDispositivo(deviceProfilo);
+    setProfiloState(deviceProfilo ?? 'admin');
     localStorage.setItem('rh_token', response.token);
     localStorage.setItem('rh_ristorante', JSON.stringify(response.ristorante));
     localStorage.setItem('rh_ruoli', JSON.stringify(response.ruoli));
@@ -166,10 +200,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('rh_token');
     localStorage.removeItem('rh_ristorante');
     localStorage.removeItem('rh_ruoli');
+    localStorage.removeItem('rh_device_profilo');
+    localStorage.removeItem('rh_device_id');
+    setProfiloDispositivo(null);
     setToken(null);
     setRistorante(null);
     setRuoli([]);
   }, []);
+
+  useEffect(() => { logoutRef.current = logout; }, [logout]);
 
   const refreshRistorante = useCallback((r: Ristorante) => {
     localStorage.setItem('rh_ristorante', JSON.stringify(r));
@@ -196,7 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ token, ristorante, ruoli, login, logout, refreshRistorante, isAuthenticated: !!token, newOrderAlert, dismissOrderAlert, profilo, setProfilo, trialExpired, trialDaysLeft }}
+      value={{ token, ristorante, ruoli, login, logout, profiloBloccato: !!profiloDispositivo, refreshRistorante, isAuthenticated: !!token, newOrderAlert, dismissOrderAlert, profilo, setProfilo, trialExpired, trialDaysLeft }}
     >
       {children}
     </AuthContext.Provider>
