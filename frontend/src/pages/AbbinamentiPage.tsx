@@ -7,7 +7,7 @@ import {
   createAbbinamento,
   deleteAbbinamento,
 } from '../api/abbinamenti';
-import { MenuItem, Abbinamento, TipoAbbinamento, CategoriaMenu } from '../types';
+import { MenuItem, Abbinamento, TipoAbbinamento } from '../types';
 
 const TIPO_LABEL: Record<TipoAbbinamento, string> = {
   VINO: 'Vino',
@@ -22,11 +22,6 @@ const TIPO_STYLE: Record<TipoAbbinamento, string> = {
   BIBITA: 'badge bg-blue-100 text-blue-700',
   DESSERT: 'badge bg-pink-100 text-pink-700',
 };
-
-const FOOD_CATS: CategoriaMenu[] = ['ANTIPASTO', 'PRIMO', 'SECONDO', 'CONTORNO', 'DESSERT'];
-const DRINK_CATS: CategoriaMenu[] = [
-  'VINO_ROSSO', 'VINO_BIANCO', 'VINO_ROSE', 'COCKTAIL', 'BIBITA', 'ACQUA',
-];
 
 function Spinner() {
   return (
@@ -98,8 +93,8 @@ export default function AbbinamentiPage() {
     setDeleteId(null);
   };
 
-  const foodItems = menuItems.filter((m) => FOOD_CATS.includes(m.categoria));
-  const drinkItems = menuItems.filter((m) => DRINK_CATS.includes(m.categoria));
+  const foodItems = menuItems.filter((m) => m.categoria.destinazione !== 'BAR');
+  const drinkItems = menuItems.filter((m) => m.categoria.destinazione === 'BAR');
 
   const getItemName = (id: number) =>
     menuItems.find((m) => m.id === id)?.nome ?? `ID ${id}`;
@@ -132,7 +127,7 @@ export default function AbbinamentiPage() {
               >
                 <p className="font-medium">{item.nome}</p>
                 <p className={`text-xs ${selectedPiatto?.id === item.id ? 'text-red-200' : 'text-gray-400'}`}>
-                  {item.categoria}
+                  {item.categoria.nome}
                 </p>
               </button>
             ))}
@@ -242,7 +237,7 @@ export default function AbbinamentiPage() {
                 >
                   <option value="">Seleziona…</option>
                   {drinkItems.map((m) => (
-                    <option key={m.id} value={m.id}>{m.nome} — {m.categoria}</option>
+                    <option key={m.id} value={m.id}>{m.nome} — {m.categoria.nome}</option>
                   ))}
                 </select>
               </div>

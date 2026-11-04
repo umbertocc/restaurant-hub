@@ -5,29 +5,12 @@ import { getRistorante } from '../api/ristoranti';
 import { getMenu } from '../api/menu';
 import { createOrdine } from '../api/ordini';
 import { getSuggerimenti } from '../api/abbinamenti';
-import { Ristorante, MenuItem, CategoriaMenu } from '../types';
-
-const FOOD_CATS: CategoriaMenu[] = ['ANTIPASTO', 'PRIMO', 'SECONDO', 'CONTORNO', 'DESSERT'];
+import { Ristorante, MenuItem } from '../types';
 
 interface CartItem {
   item: MenuItem;
   quantita: number;
 }
-
-const CATEGORIA_LABELS: Record<CategoriaMenu, string> = {
-  ANTIPASTO: 'Antipasti',
-  PRIMO: 'Primi',
-  SECONDO: 'Secondi',
-  CONTORNO: 'Contorni',
-  DESSERT: 'Dessert',
-  VINO_ROSSO: 'Vini Rossi',
-  VINO_BIANCO: 'Vini Bianchi',
-  VINO_ROSE: 'Vini Rosé',
-  COCKTAIL: 'Cocktail',
-  BIBITA: 'Bibite',
-  ACQUA: 'Acqua',
-  PIZZA: 'Pizze',
-};
 
 export default function PublicTavoloPage() {
   const { ristoranteId, tavoloId } = useParams<{ ristoranteId: string; tavoloId: string }>();
@@ -106,13 +89,12 @@ export default function PublicTavoloPage() {
     }
   };
 
-  const grouped = menu.reduce((acc, item) => {
-    if (!acc[item.categoria]) acc[item.categoria] = [];
-    acc[item.categoria].push(item);
+  const grouped = menu.reduce<Record<number, MenuItem[]>>((acc, item) => {
+    (acc[item.categoria.id] ??= []).push(item);
     return acc;
-  }, {} as Record<CategoriaMenu, MenuItem[]>);
-
-  const categorie = Object.keys(grouped) as CategoriaMenu[];
+  }, {});
+  const categorie = [...new Map(menu.map((item) => [item.categoria.id, item.categoria])).values()]
+    .sort((a, b) => a.nome.localeCompare(b.nome));
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -157,13 +139,14 @@ export default function PublicTavoloPage() {
           </div>
         )}
 
-        {categorie.map((cat) => (
-          <div key={cat}>
+        {categorie.map((categoria) => (
+          <div key={categoria.id}>
             <h2 className="text-lg font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">
-              {CATEGORIA_LABELS[cat] ?? cat}
+              {categoria.nome}
             </h2>
+            {categoria.descrizione && <p className="text-sm text-gray-500 mb-3">{categoria.descrizione}</p>}
             <div className="space-y-3">
-              {grouped[cat].map((item) => {
+              {grouped[categoria.id].map((item) => {
                 const inCart = cart[item.id]?.quantita ?? 0;
                 return (
                   <div
@@ -187,7 +170,7 @@ export default function PublicTavoloPage() {
                         <p className="text-xs text-amber-600 mt-0.5">⚠ {item.allergeni}</p>
                       )}
                       <p className="text-red-600 font-bold mt-1">€{item.prezzo.toFixed(2)}</p>
-                      {FOOD_CATS.includes(item.categoria) && (
+                      {item.categoria.destinazione !== 'BAR' && (
                         <button
                           onClick={() => openAbbModal(item)}
                           className="mt-1.5 flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 font-medium"

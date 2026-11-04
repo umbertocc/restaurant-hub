@@ -1,34 +1,36 @@
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, Search, X, Check, Package } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, X, Check, Package, Save } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getMenu, createMenuItem, updateMenuItem, deleteMenuItem } from '../api/menu';
-import { MenuItem, CategoriaMenu } from '../types';
-
-const CATEGORIE: CategoriaMenu[] = [
-  'ANTIPASTO', 'PRIMO', 'SECONDO', 'CONTORNO', 'DESSERT',
-  'VINO_ROSSO', 'VINO_BIANCO', 'VINO_ROSE', 'COCKTAIL', 'BIBITA', 'ACQUA', 'PIZZA',
-];
-
-const CATEGORIA_LABEL: Record<CategoriaMenu, string> = {
-  ANTIPASTO: 'Antipasto', PRIMO: 'Primo', SECONDO: 'Secondo',
-  CONTORNO: 'Contorno', DESSERT: 'Dessert',
-  VINO_ROSSO: 'Vino Rosso', VINO_BIANCO: 'Vino Bianco', VINO_ROSE: 'Vino Rosé',
-  COCKTAIL: 'Cocktail', BIBITA: 'Bibita', ACQUA: 'Acqua',
-  PIZZA: 'Pizza',
-};
+import {
+  createCategoriaMenu, createMenuItem, deleteCategoriaMenu, deleteMenuItem,
+  getCategorieMenu, getMenu, updateCategoriaMenu, updateMenuItem,
+} from '../api/menu';
+import { DestinazioneMenu, MenuCategoria, MenuItem } from '../types';
 
 type ModalMode = 'add' | 'edit' | null;
 
-const emptyItem = (ristoranteId: number): Omit<MenuItem, 'id'> => ({
-  ristoranteId,
-  nome: '',
-  descrizione: '',
-  categoria: 'PRIMO',
-  prezzo: 0,
-  disponibile: true,
-  immagineUrl: '',
-  allergeni: '',
+type MenuItemDraft = {
+  id?: number;
+  ristoranteId: number;
+  nome: string;
+  descrizione?: string;
+  categoriaId: number | '';
+  prezzo: number;
+  disponibile: boolean;
+  immagineUrl?: string;
+  allergeni?: string;
+};
+
+const emptyItem = (ristoranteId: number, categoriaId: number | '' = ''): MenuItemDraft => ({
+  ristoranteId, nome: '', descrizione: '', categoriaId, prezzo: 0,
+  disponibile: true, immagineUrl: '', allergeni: '',
 });
+
+const DESTINAZIONI: { value: DestinazioneMenu; label: string }[] = [
+  { value: 'CUCINA', label: 'Cucina' },
+  { value: 'BAR', label: 'Bar' },
+  { value: 'PIZZERIA', label: 'Pizzeria' },
+];
 
 function Spinner() {
   return (
@@ -41,19 +43,28 @@ function Spinner() {
 export default function MenuPage() {
   const { ristorante } = useAuth();
   const [items, setItems] = useState<MenuItem[]>([]);
+  const [categorie, setCategorie] = useState<MenuCategoria[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filterCat, setFilterCat] = useState<CategoriaMenu | 'ALL'>('ALL');
+  const [filterCat, setFilterCat] = useState<number | 'ALL'>('ALL');
   const [modalMode, setModalMode] = useState<ModalMode>(null);
-  const [editItem, setEditItem] = useState<Partial<MenuItem>>(emptyItem(ristorante?.id ?? 0));
+  const [editItem, setEditItem] = useState<MenuItemDraft>(emptyItem(ristorante?.id ?? 0));
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [categoriaDraft, setCategoriaDraft] = useState<{
+    id?: number; nome: string; descrizione: string; destinazione: DestinazioneMenu;
+  }>({ nome: '', descrizione: '', destinazione: 'CUCINA' });
+  const [categoriaDeleteId, setCategoriaDeleteId] = useState<number | null>(null);
+  const [error, setError] = useState('');
 
   const load = () => {
     if (!ristorante) return;
     setLoading(true);
-    getMenu(ristorante.id)
-      .then((data) => setItems(Array.isArray(data) ? data : []))
+    Promise.all([getMenu(ristorante.id), getCategorieMenu(ristorante.id)])
+      .then(([menu, categorieMenu]) => {
+        setItems(Array.isArray(menu) ? menu : []);
+        setCategorie(Array.isArray(categorieMenu) ? categorieMenu : []);
+      })
       .finally(() => setLoading(false));
   };
 
@@ -64,17 +75,18 @@ export default function MenuPage() {
     const matchSearch =
       item.nome.toLowerCase().includes(q) ||
       (item.descrizione ?? '').toLowerCase().includes(q);
-    const matchCat = filterCat === 'ALL' || item.categoria === filterCat;
+    const matchCat = filterCat === 'ALL' || item.categoria.id === filterCat;
     return matchSearch && matchCat;
   });
 
   const openAdd = () => {
-    setEditItem(emptyItem(ristorante!.id));
+    setEditItem(emptyItem(ristorante!.id, categorie[0]?.id ?? ''));
     setModalMode('add');
   };
 
   const openEdit = (item: MenuItem) => {
-    setEditItem({ ...item });
+    const { categoria, ...rest } = item;
+    setEditItem({ ...rest, categoriaId: categoria.id });
     setModalMode('edit');
   };
 
@@ -83,19 +95,56 @@ export default function MenuPage() {
   };
 
   const handleSave = async () => {
+    if (editItem.categoriaId === '') return;
     setSaving(true);
+    setError('');
     try {
+      const { id, ...data } = editItem;
+      const payload = { ...data, categoriaId: editItem.categoriaId };
       if (modalMode === 'add') {
-        const created = await createMenuItem(editItem as Omit<MenuItem, 'id'>);
+        const created = await createMenuItem(payload);
         setItems((prev) => [...prev, created]);
-      } else if (modalMode === 'edit' && editItem.id !== undefined) {
-        const { id, ...data } = editItem as MenuItem;
-        const updated = await updateMenuItem(id, data);
+      } else if (modalMode === 'edit' && id !== undefined) {
+        const updated = await updateMenuItem(id, payload);
         setItems((prev) => prev.map((i) => (i.id === id ? updated : i)));
       }
       closeModal();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Errore durante il salvataggio del piatto');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveCategoria = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      const payload = {
+        nome: categoriaDraft.nome,
+        descrizione: categoriaDraft.descrizione || undefined,
+        destinazione: categoriaDraft.destinazione,
+      };
+      if (categoriaDraft.id) await updateCategoriaMenu(categoriaDraft.id, payload);
+      else await createCategoriaMenu(payload);
+      setCategoriaDraft({ nome: '', descrizione: '', destinazione: 'CUCINA' });
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Errore durante il salvataggio della categoria');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteCategoria = async (id: number) => {
+    setError('');
+    try {
+      await deleteCategoriaMenu(id);
+      setCategoriaDeleteId(null);
+      if (filterCat === id) setFilterCat('ALL');
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Impossibile eliminare la categoria');
     }
   };
 
@@ -110,7 +159,7 @@ export default function MenuPage() {
     setItems((prev) => prev.map((i) => (i.id === item.id ? updated : i)));
   };
 
-  const set = (field: string, value: unknown) =>
+  const set = (field: keyof MenuItemDraft, value: unknown) =>
     setEditItem((prev) => ({ ...prev, [field]: value }));
 
   if (loading) return <Spinner />;
@@ -123,11 +172,64 @@ export default function MenuPage() {
           <h1 className="page-title">Menu</h1>
           <p className="text-sm text-gray-500 mt-0.5">{items.length} voci totali</p>
         </div>
-        <button onClick={openAdd} className="btn-primary gap-2">
+        <button onClick={openAdd} disabled={categorie.length === 0} className="btn-primary gap-2 disabled:opacity-50">
           <Plus className="w-4 h-4" />
           Aggiungi piatto
         </button>
       </div>
+
+      {error && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+
+      <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
+        <div>
+          <h2 className="font-semibold text-gray-900">Categorie del menu</h2>
+          <p className="text-sm text-gray-500">Definisci nome, descrizione e postazione che riceverà gli ordini.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <input className="input" placeholder="Nome categoria *" value={categoriaDraft.nome}
+            onChange={(e) => setCategoriaDraft((d) => ({ ...d, nome: e.target.value }))} />
+          <input className="input" placeholder="Descrizione" value={categoriaDraft.descrizione}
+            onChange={(e) => setCategoriaDraft((d) => ({ ...d, descrizione: e.target.value }))} />
+          <select className="input" value={categoriaDraft.destinazione}
+            onChange={(e) => setCategoriaDraft((d) => ({ ...d, destinazione: e.target.value as DestinazioneMenu }))}>
+            {DESTINAZIONI.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+          </select>
+          <div className="flex gap-2">
+            <button type="button" onClick={handleSaveCategoria} disabled={saving || !categoriaDraft.nome.trim()}
+              className="btn-primary gap-2 flex-1">
+              <Save className="w-4 h-4" /> {categoriaDraft.id ? 'Aggiorna' : 'Crea categoria'}
+            </button>
+            {categoriaDraft.id && <button type="button" className="btn-secondary" onClick={() =>
+              setCategoriaDraft({ nome: '', descrizione: '', destinazione: 'CUCINA' })}>Annulla</button>}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {categorie.map((categoria) => (
+            <div key={categoria.id} className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2">
+              <div>
+                <p className="text-sm font-medium">{categoria.nome}</p>
+                <p className="text-xs text-gray-500">{DESTINAZIONI.find((d) => d.value === categoria.destinazione)?.label}</p>
+              </div>
+              <button type="button" aria-label={`Modifica ${categoria.nome}`} onClick={() => setCategoriaDraft({
+                id: categoria.id, nome: categoria.nome, descrizione: categoria.descrizione ?? '',
+                destinazione: categoria.destinazione,
+              })} className="p-1 text-gray-400 hover:text-blue-600"><Pencil className="w-4 h-4" /></button>
+              {categoriaDeleteId === categoria.id ? (
+                <>
+                  <button type="button" aria-label={`Conferma eliminazione ${categoria.nome}`}
+                    onClick={() => handleDeleteCategoria(categoria.id)} className="p-1 text-red-600"><Check className="w-4 h-4" /></button>
+                  <button type="button" aria-label="Annulla eliminazione" onClick={() => setCategoriaDeleteId(null)}
+                    className="p-1 text-gray-400"><X className="w-4 h-4" /></button>
+                </>
+              ) : (
+                <button type="button" aria-label={`Elimina ${categoria.nome}`} onClick={() => setCategoriaDeleteId(categoria.id)}
+                  className="p-1 text-gray-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+              )}
+            </div>
+          ))}
+          {categorie.length === 0 && <p className="text-sm text-amber-700">Crea una categoria prima di aggiungere piatti.</p>}
+        </div>
+      </section>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -142,7 +244,7 @@ export default function MenuPage() {
           />
         </div>
         <div className="flex gap-2 flex-wrap">
-          {(['ALL', ...CATEGORIE] as const).map((c) => (
+          {(['ALL', ...categorie.map((categoria) => categoria.id)] as const).map((c) => (
             <button
               key={c}
               onClick={() => setFilterCat(c)}
@@ -152,7 +254,7 @@ export default function MenuPage() {
                   : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
               }`}
             >
-              {c === 'ALL' ? 'Tutti' : CATEGORIA_LABEL[c]}
+              {c === 'ALL' ? 'Tutti' : categorie.find((categoria) => categoria.id === c)?.nome}
             </button>
           ))}
         </div>
@@ -202,7 +304,7 @@ export default function MenuPage() {
                     </td>
                     <td className="px-5 py-3.5">
                       <span className="badge bg-gray-100 text-gray-600">
-                        {CATEGORIA_LABEL[item.categoria]}
+                        {item.categoria.nome}
                       </span>
                     </td>
                     <td className="px-5 py-3.5 font-semibold whitespace-nowrap">
@@ -294,11 +396,11 @@ export default function MenuPage() {
                   <label className="label">Categoria *</label>
                   <select
                     className="input"
-                    value={editItem.categoria ?? 'PRIMO'}
-                    onChange={(e) => set('categoria', e.target.value)}
+                    value={editItem.categoriaId}
+                    onChange={(e) => set('categoriaId', e.target.value ? Number(e.target.value) : '')}
                   >
-                    {CATEGORIE.map((c) => (
-                      <option key={c} value={c}>{CATEGORIA_LABEL[c]}</option>
+                    {categorie.map((c) => (
+                      <option key={c.id} value={c.id}>{c.nome}</option>
                     ))}
                   </select>
                 </div>

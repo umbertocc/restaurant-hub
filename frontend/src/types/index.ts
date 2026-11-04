@@ -44,7 +44,8 @@ export interface PublicSitoVoce {
   id: number;
   nome: string;
   descrizione?: string;
-  categoria: CategoriaMenu;
+  categoria: string;
+  descrizioneCategoria?: string;
   prezzo: number;
   immagineUrl?: string;
   allergeni?: string;
@@ -76,26 +77,22 @@ export interface Tavolo {
 }
 
 // ── Menu ─────────────────────────────────────────────────────────────────────
-export type CategoriaMenu =
-  | 'ANTIPASTO'
-  | 'PRIMO'
-  | 'SECONDO'
-  | 'CONTORNO'
-  | 'DESSERT'
-  | 'VINO_ROSSO'
-  | 'VINO_BIANCO'
-  | 'VINO_ROSE'
-  | 'COCKTAIL'
-  | 'BIBITA'
-  | 'ACQUA'
-  | 'PIZZA';
+export type DestinazioneMenu = 'CUCINA' | 'BAR' | 'PIZZERIA';
+
+export interface MenuCategoria {
+  id: number;
+  ristoranteId: number;
+  nome: string;
+  descrizione?: string;
+  destinazione: DestinazioneMenu;
+}
 
 export interface MenuItem {
   id: number;
   ristoranteId: number;
   nome: string;
   descrizione?: string;
-  categoria: CategoriaMenu;
+  categoria: MenuCategoria;
   prezzo: number;
   disponibile: boolean;
   immagineUrl?: string;
@@ -114,7 +111,8 @@ export interface OrdineItem {
   id: string;
   menuItemId: number;
   nomeMenuItem?: string;
-  categoria?: CategoriaMenu;
+  categoria?: string;
+  destinazione?: DestinazioneMenu;
   quantita: number;
   prezzoUnitario: number;
   note?: string;

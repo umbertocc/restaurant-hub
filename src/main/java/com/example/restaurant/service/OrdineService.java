@@ -57,7 +57,8 @@ public class OrdineService {
             item.setPrezzoUnitario(menuItem.getPrezzo());
             item.setNote(itemDto.getNote());
             item.setNomeMenuItem(menuItem.getNome());
-            item.setCategoria(menuItem.getCategoria().name());
+            item.setCategoria(menuItem.getCategoria().getNome());
+            item.setDestinazione(menuItem.getCategoria().getDestinazione().name());
 
             ordine.getItems().add(item);
             totale = totale.add(item.getSubtotale());

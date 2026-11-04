@@ -4,20 +4,16 @@ import { it } from 'date-fns/locale';
 import { ChefHat, CheckCircle, Clock, Flame } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getOrdini, updateStatoOrdine } from '../api/ordini';
-import { CategoriaMenu, Ordine, OrdineItem, StatoOrdine } from '../types';
+import { Ordine, OrdineItem, StatoOrdine } from '../types';
 import { ORDERS_CHANGED_EVENT } from '../realtime/ordersRealtime';
 
-const CATEGORIE_BEVANDE = new Set<CategoriaMenu>([
-  'VINO_ROSSO', 'VINO_BIANCO', 'VINO_ROSE', 'COCKTAIL', 'BIBITA', 'ACQUA',
-]);
-
-function isBevanda(item: OrdineItem): boolean {
-  return !!item.categoria && CATEGORIE_BEVANDE.has(item.categoria);
+function isOtherStation(item: OrdineItem): boolean {
+  return item.destinazione !== 'CUCINA';
 }
 
 /** Filtra gli items escludendo le bevande. Restituisce null se non rimane nulla. */
 function filtraItemsCucina(ordine: Ordine): Ordine | null {
-  const itemsCucina = ordine.items.filter((i) => !isBevanda(i));
+  const itemsCucina = ordine.items.filter((i) => !isOtherStation(i));
   if (itemsCucina.length === 0) return null;
   return { ...ordine, items: itemsCucina };
 }

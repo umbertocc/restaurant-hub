@@ -24,7 +24,6 @@ import java.util.concurrent.Executors;
 
 /**
  * Stampa le comande su stampanti Epson ESC/POS in rete (TCP 9100), una per reparto.
- * Pizza -> pizzeria; cocktail, bibite, vini, acqua -> bar; tutto il resto -> cucina.
  */
 @Service
 public class PrintService {
@@ -73,7 +72,7 @@ public class PrintService {
 
             Map<Reparto, List<OrdineItem>> perReparto = new EnumMap<>(Reparto.class);
             for (OrdineItem item : ordine.getItems()) {
-                perReparto.computeIfAbsent(repartoDi(item.getCategoria()), r -> new ArrayList<>()).add(item);
+                perReparto.computeIfAbsent(repartoDi(item.getDestinazione()), r -> new ArrayList<>()).add(item);
             }
             perReparto.forEach((reparto, items) -> {
                 String target = printers.get(reparto);
@@ -89,18 +88,13 @@ public class PrintService {
         }
     }
 
-    private Reparto repartoDi(String categoria) {
-        if (categoria == null) {
-            return Reparto.CUCINA;
-        }
-        if ("PIZZA".equals(categoria)) {
-            return Reparto.PIZZERIA;
-        }
-        if (categoria.equals("COCKTAIL") || categoria.equals("BIBITA") || categoria.equals("ACQUA")
-                || categoria.startsWith("VINO_")) {
-            return Reparto.BAR;
-        }
-        return Reparto.CUCINA;
+    private Reparto repartoDi(String destinazione) {
+        if (destinazione == null) return Reparto.CUCINA;
+        return switch (destinazione) {
+            case "BAR" -> Reparto.BAR;
+            case "PIZZERIA" -> Reparto.PIZZERIA;
+            default -> Reparto.CUCINA;
+        };
     }
 
     private byte[] buildTicket(Reparto reparto, String tavolo, Ordine ordine, List<OrdineItem> items) {

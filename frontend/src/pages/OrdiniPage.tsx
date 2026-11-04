@@ -5,22 +5,8 @@ import { it } from 'date-fns/locale';
 import { Plus, X, ShoppingCart, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getOrdini, createOrdine, updateStatoOrdine } from '../api/ordini';
-import { getMenu } from '../api/menu';
-import { Ordine, MenuItem, OrdineItemDTO, StatoOrdine, CategoriaMenu } from '../types';
-
-const CAT_PILLS: { label: string; value: CategoriaMenu | 'ALL' }[] = [
-  { label: 'Tutti', value: 'ALL' },
-  { label: 'Antipasti', value: 'ANTIPASTO' },
-  { label: 'Primi', value: 'PRIMO' },
-  { label: 'Secondi', value: 'SECONDO' },
-  { label: 'Contorni', value: 'CONTORNO' },
-  { label: 'Dessert', value: 'DESSERT' },
-  { label: 'Pizza', value: 'PIZZA' },
-  { label: 'Vini', value: 'VINO_ROSSO' },
-  { label: 'Cocktail', value: 'COCKTAIL' },
-  { label: 'Bibite', value: 'BIBITA' },
-  { label: 'Acqua', value: 'ACQUA' },
-];
+import { getCategorieMenu, getMenu } from '../api/menu';
+import { Ordine, MenuItem, OrdineItemDTO, StatoOrdine, MenuCategoria } from '../types';
 
 const STATO_STYLE: Record<StatoOrdine, string> = {
   APERTO: 'badge bg-blue-100 text-blue-700',
@@ -74,6 +60,7 @@ export default function OrdiniPage() {
   const { ristorante } = useAuth();
   const [ordini, setOrdini] = useState<Ordine[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [categorie, setCategorie] = useState<MenuCategoria[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<StatoOrdine | 'ALL'>('APERTO');
   const [showModal, setShowModal] = useState(false);
@@ -84,16 +71,17 @@ export default function OrdiniPage() {
   const [orderNote, setOrderNote] = useState('');
   const [creating, setCreating] = useState(false);
   const [menuSearch, setMenuSearch] = useState('');
-  const [menuCatFilter, setMenuCatFilter] = useState<CategoriaMenu | 'ALL'>('ALL');
+  const [menuCatFilter, setMenuCatFilter] = useState<number | 'ALL'>('ALL');
 
   const load = () => {
     if (!ristorante) return;
-    Promise.all([getOrdini(), getMenu(ristorante.id)])
-      .then(([o, m]) => {
+    Promise.all([getOrdini(), getMenu(ristorante.id), getCategorieMenu(ristorante.id)])
+      .then(([o, m, c]) => {
         const ordiniArr = (Array.isArray(o) ? o : []).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
         const menuArr = Array.isArray(m) ? m : [];
         setOrdini(ordiniArr);
         setMenuItems(menuArr.filter((i) => i.disponibile));
+        setCategorie(Array.isArray(c) ? c : []);
       })
       .finally(() => setLoading(false));
   };
@@ -160,9 +148,7 @@ export default function OrdiniPage() {
     const matchSearch = m.nome.toLowerCase().includes(menuSearch.toLowerCase());
     const matchCat = menuCatFilter === 'ALL'
       ? true
-      : menuCatFilter === 'VINO_ROSSO'
-        ? ['VINO_ROSSO', 'VINO_BIANCO', 'VINO_ROSE'].includes(m.categoria)
-        : m.categoria === menuCatFilter;
+      : m.categoria.id === menuCatFilter;
     return matchSearch && matchCat;
   });
 
@@ -290,18 +276,18 @@ export default function OrdiniPage() {
                   onChange={(e) => setMenuSearch(e.target.value)}
                 />
                 <div className="flex gap-1.5 flex-wrap mb-3">
-                  {CAT_PILLS.map((p) => (
+                  {[{ id: 'ALL' as const, nome: 'Tutti' }, ...categorie].map((categoria) => (
                     <button
-                      key={p.value}
+                      key={categoria.id}
                       type="button"
-                      onClick={() => setMenuCatFilter(p.value)}
+                      onClick={() => setMenuCatFilter(categoria.id)}
                       className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${
-                        menuCatFilter === p.value
+                        menuCatFilter === categoria.id
                           ? 'bg-red-600 text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
-                      {p.label}
+                      {categoria.nome}
                     </button>
                   ))}
                 </div>

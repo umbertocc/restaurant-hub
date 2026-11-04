@@ -2,20 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ChefHat, MapPin, Phone, Clock, Instagram, Facebook, CalendarDays } from 'lucide-react';
 import { getSitoPubblico } from '../api/sito';
-import { CategoriaMenu, PublicSito, PublicSitoVoce } from '../types';
-
-const ORDINE_CATEGORIE: CategoriaMenu[] = [
-  'ANTIPASTO', 'PIZZA', 'PRIMO', 'SECONDO', 'CONTORNO', 'DESSERT',
-  'VINO_ROSSO', 'VINO_BIANCO', 'VINO_ROSE', 'COCKTAIL', 'BIBITA', 'ACQUA',
-];
-
-const CATEGORIA_LABEL: Record<CategoriaMenu, string> = {
-  ANTIPASTO: 'Antipasti', PRIMO: 'Primi', SECONDO: 'Secondi',
-  CONTORNO: 'Contorni', DESSERT: 'Dessert',
-  VINO_ROSSO: 'Vini rossi', VINO_BIANCO: 'Vini bianchi', VINO_ROSE: 'Vini rosé',
-  COCKTAIL: 'Cocktail', BIBITA: 'Bibite', ACQUA: 'Acqua',
-  PIZZA: 'Pizze',
-};
+import { PublicSito, PublicSitoVoce } from '../types';
 
 const euro = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' });
 
@@ -42,11 +29,11 @@ export default function PublicSitoPage() {
   }, [slug]);
 
   const sezioni = useMemo(() => {
-    const perCategoria = new Map<CategoriaMenu, PublicSitoVoce[]>();
+    const perCategoria = new Map<string, PublicSitoVoce[]>();
     (sito?.menu ?? []).forEach((v) => {
       perCategoria.set(v.categoria, [...(perCategoria.get(v.categoria) ?? []), v]);
     });
-    return ORDINE_CATEGORIE.filter((c) => perCategoria.has(c)).map((c) => ({
+    return [...perCategoria.keys()].map((c) => ({
       categoria: c,
       voci: perCategoria.get(c)!,
     }));
@@ -172,8 +159,11 @@ export default function PublicSitoPage() {
             {sezioni.map(({ categoria, voci }) => (
               <div key={categoria}>
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-red-600 mb-2">
-                  {CATEGORIA_LABEL[categoria]}
+                  {categoria}
                 </h3>
+                {voci[0]?.descrizioneCategoria && (
+                  <p className="text-sm text-gray-500 mb-3">{voci[0].descrizioneCategoria}</p>
+                )}
                 <ul className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100">
                   {voci.map((v) => {
                     const img = safeUrl(v.immagineUrl);

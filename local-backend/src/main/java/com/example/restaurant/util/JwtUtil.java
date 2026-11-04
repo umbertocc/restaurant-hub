@@ -87,6 +87,11 @@ public class JwtUtil {
         return (String) extractClaims(token).get("role");
     }
 
+    public String extractProfilo(String token) {
+        Object val = extractClaims(token).get("profilo");
+        return val instanceof String s && !s.isBlank() ? s : "admin";
+    }
+
     public boolean isTokenValid(String token) {
         try {
             Claims claims = extractClaims(token);

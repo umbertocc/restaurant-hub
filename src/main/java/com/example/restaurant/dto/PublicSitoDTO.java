@@ -1,7 +1,5 @@
 package com.example.restaurant.dto;
 
-import com.example.restaurant.model.MenuItem.Categoria;
-
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -24,7 +22,8 @@ public record PublicSitoDTO(
             Long id,
             String nome,
             String descrizione,
-            Categoria categoria,
+            String categoria,
+            String descrizioneCategoria,
             BigDecimal prezzo,
             String immagineUrl,
             String allergeni) {

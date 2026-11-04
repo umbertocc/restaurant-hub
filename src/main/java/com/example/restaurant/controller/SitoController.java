@@ -45,7 +45,8 @@ public class SitoController {
         List<PublicSitoDTO.Voce> menu = menuItemRepository.findByRistoranteIdAndDisponibile(r.getId(), true)
                 .stream()
                 .map(m -> new PublicSitoDTO.Voce(m.getId(), m.getNome(), m.getDescrizione(),
-                        m.getCategoria(), m.getPrezzo(), m.getImmagineUrl(), m.getAllergeni()))
+                        m.getCategoria().getNome(), m.getCategoria().getDescrizione(),
+                        m.getPrezzo(), m.getImmagineUrl(), m.getAllergeni()))
                 .toList();
 
         return new PublicSitoDTO(r.getId(), r.getNome(), r.getDescrizione(), r.getIndirizzo(),

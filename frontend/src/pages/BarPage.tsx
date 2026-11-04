@@ -4,15 +4,11 @@ import { it } from 'date-fns/locale';
 import { GlassWater, CheckCircle, Clock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getOrdini, updateStatoOrdine } from '../api/ordini';
-import { CategoriaMenu, Ordine, OrdineItem, StatoOrdine } from '../types';
+import { Ordine, OrdineItem, StatoOrdine } from '../types';
 import { ORDERS_CHANGED_EVENT } from '../realtime/ordersRealtime';
 
-const CATEGORIE_BEVANDE = new Set<CategoriaMenu>([
-  'VINO_ROSSO', 'VINO_BIANCO', 'VINO_ROSE', 'COCKTAIL', 'BIBITA', 'ACQUA',
-]);
-
 function isBevanda(item: OrdineItem): boolean {
-  return !!item.categoria && CATEGORIE_BEVANDE.has(item.categoria);
+  return item.destinazione === 'BAR';
 }
 
 /** Filtra gli items lasciando solo le bevande. Restituisce null se non rimane nulla. */

@@ -19,9 +19,9 @@ public class MenuItem {
 
     private String descrizione;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Categoria categoria;
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "categoria_id", nullable = false)
+    private MenuCategoria categoria;
 
     @Column(nullable = false)
     private BigDecimal prezzo;
@@ -32,11 +32,6 @@ public class MenuItem {
     private String immagineUrl;
 
     private String allergeni;
-
-    public enum Categoria {
-        ANTIPASTO, PRIMO, SECONDO, CONTORNO, DESSERT,
-        VINO_ROSSO, VINO_BIANCO, VINO_ROSE, COCKTAIL, BIBITA, ACQUA, PIZZA
-    } 
 
     // Getters & Setters
     public Long getId() { return id; }
@@ -51,8 +46,8 @@ public class MenuItem {
     public String getDescrizione() { return descrizione; }
     public void setDescrizione(String descrizione) { this.descrizione = descrizione; }
 
-    public Categoria getCategoria() { return categoria; }
-    public void setCategoria(Categoria categoria) { this.categoria = categoria; }
+    public MenuCategoria getCategoria() { return categoria; }
+    public void setCategoria(MenuCategoria categoria) { this.categoria = categoria; }
 
     public BigDecimal getPrezzo() { return prezzo; }
     public void setPrezzo(BigDecimal prezzo) { this.prezzo = prezzo; }

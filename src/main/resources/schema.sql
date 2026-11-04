@@ -74,12 +74,21 @@ CREATE TABLE IF NOT EXISTS restaurant.prenotazioni (
     created_at          TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS restaurant.menu_categorie (
+    id              BIGSERIAL PRIMARY KEY,
+    ristorante_id   BIGINT NOT NULL REFERENCES restaurant.ristoranti(id) ON DELETE CASCADE,
+    nome            VARCHAR(100) NOT NULL,
+    descrizione     VARCHAR(1000),
+    destinazione    VARCHAR(20) NOT NULL CHECK (destinazione IN ('CUCINA', 'BAR', 'PIZZERIA')),
+    CONSTRAINT uk_menu_categorie_ristorante_nome UNIQUE (ristorante_id, nome)
+);
+
 CREATE TABLE IF NOT EXISTS restaurant.menu_items (
     id              BIGSERIAL PRIMARY KEY,
     ristorante_id   BIGINT NOT NULL REFERENCES restaurant.ristoranti(id) ON DELETE CASCADE,
     nome            VARCHAR(255) NOT NULL,
     descrizione     TEXT,
-    categoria       VARCHAR(50) NOT NULL,
+    categoria_id    BIGINT NOT NULL REFERENCES restaurant.menu_categorie(id),
     prezzo          NUMERIC(10, 2) NOT NULL,
     disponibile     BOOLEAN NOT NULL DEFAULT TRUE,
     immagine_url    VARCHAR(500),
@@ -107,7 +116,8 @@ CREATE TABLE IF NOT EXISTS restaurant.ordine_items (
     note            TEXT
 );
 ALTER TABLE restaurant.ordine_items ADD COLUMN IF NOT EXISTS nome_menu_item VARCHAR(255);
-ALTER TABLE restaurant.ordine_items ADD COLUMN IF NOT EXISTS categoria VARCHAR(50);
+ALTER TABLE restaurant.ordine_items ADD COLUMN IF NOT EXISTS categoria VARCHAR(100);
+ALTER TABLE restaurant.ordine_items ADD COLUMN IF NOT EXISTS destinazione VARCHAR(20);
 
 CREATE TABLE IF NOT EXISTS restaurant.abbinamenti (
     id                  BIGSERIAL PRIMARY KEY,
