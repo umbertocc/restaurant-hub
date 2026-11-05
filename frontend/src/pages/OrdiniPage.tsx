@@ -67,6 +67,7 @@ export default function OrdiniPage() {
 
   // New order form state
   const [tavoloId, setTavoloId] = useState('');
+  const [coperti, setCoperti] = useState(1);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orderNote, setOrderNote] = useState('');
   const [creating, setCreating] = useState(false);
@@ -115,7 +116,9 @@ export default function OrdiniPage() {
     setCart((prev) => prev.map((c) => (c.menuItem.id === id ? { ...c, quantita: q } : c)));
   };
 
-  const cartTotal = cart.reduce((s, c) => s + Number(c.menuItem.prezzo) * c.quantita, 0);
+  const prodottiTotal = cart.reduce((s, c) => s + Number(c.menuItem.prezzo) * c.quantita, 0);
+  const prezzoCoperto = Number(ristorante?.prezzoCoperto ?? 0);
+  const cartTotal = prodottiTotal + coperti * prezzoCoperto;
 
   const handleCreate = async () => {
     if (!ristorante || !tavoloId || cart.length === 0) return;
@@ -129,6 +132,7 @@ export default function OrdiniPage() {
       const newOrdine = await createOrdine({
         ristoranteId: ristorante.id,
         tavoloId: parseInt(tavoloId),
+        coperti,
         items,
         note: orderNote || undefined,
       });
@@ -136,6 +140,7 @@ export default function OrdiniPage() {
       setShowModal(false);
       setCart([]);
       setTavoloId('');
+      setCoperti(1);
       setOrderNote('');
       setMenuSearch('');
       setMenuCatFilter('ALL');
@@ -206,7 +211,7 @@ export default function OrdiniPage() {
                   </div>
                   <p className="text-xs text-gray-400">
                     {safeFormat(o.createdAt)}
-                    {' · '}{o.items.length} voci · totale <strong className="text-gray-700">€{Number(o.totale).toFixed(2)}</strong>
+                    {' · '}{o.coperti} {o.coperti === 1 ? 'coperto' : 'coperti'} · {o.items.length} voci · totale <strong className="text-gray-700">€{Number(o.totale).toFixed(2)}</strong>
                   </p>
                   {o.note && <p className="text-xs text-gray-500 mt-0.5 italic">"{o.note}"</p>}
                 </div>
@@ -263,6 +268,21 @@ export default function OrdiniPage() {
                   value={tavoloId}
                   onChange={(e) => setTavoloId(e.target.value)}
                 />
+              </div>
+              <div className="max-w-xs">
+                <label className="label">Numero coperti *</label>
+                <input
+                  type="number"
+                  min="1"
+                  className="input"
+                  value={coperti}
+                  onChange={(e) => setCoperti(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                />
+                {prezzoCoperto > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    €{prezzoCoperto.toFixed(2)} a persona · €{(prezzoCoperto * coperti).toFixed(2)} totali
+                  </p>
+                )}
               </div>
 
               {/* Menu search */}
@@ -340,7 +360,7 @@ export default function OrdiniPage() {
                       </div>
                     ))}
                     <div className="flex justify-end pt-1">
-                      <span className="font-bold text-gray-900">Totale: € {cartTotal.toFixed(2)}</span>
+                      <span className="font-bold text-gray-900">Totale ordine: € {cartTotal.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>

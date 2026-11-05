@@ -36,6 +36,8 @@ ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS copertina_url VARCHAR
 ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS instagram_url VARCHAR(500);
 ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS facebook_url VARCHAR(500);
 ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS sito_pubblicato BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE restaurant.ristoranti ADD COLUMN IF NOT EXISTS prezzo_coperto NUMERIC(10, 2) NOT NULL DEFAULT 0
+    CHECK (prezzo_coperto >= 0);
 CREATE UNIQUE INDEX IF NOT EXISTS uk_ristoranti_slug ON restaurant.ristoranti(slug) WHERE slug IS NOT NULL;
 
 -- Normalizza eventuali dati legacy: il piano ENTERPRISE non e piu supportato.
@@ -106,6 +108,9 @@ CREATE TABLE IF NOT EXISTS restaurant.ordini (
     created_at      TIMESTAMPTZ DEFAULT NOW(),
     chiuso_at       TIMESTAMPTZ
 );
+ALTER TABLE restaurant.ordini ADD COLUMN IF NOT EXISTS coperti INT NOT NULL DEFAULT 1 CHECK (coperti >= 1);
+ALTER TABLE restaurant.ordini ADD COLUMN IF NOT EXISTS prezzo_coperto NUMERIC(10, 2) NOT NULL DEFAULT 0
+    CHECK (prezzo_coperto >= 0);
 
 CREATE TABLE IF NOT EXISTS restaurant.ordine_items (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),

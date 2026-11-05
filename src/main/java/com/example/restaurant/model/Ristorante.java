@@ -2,6 +2,7 @@ package com.example.restaurant.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -40,6 +41,9 @@ public class Ristorante {
     private String copertinaUrl;
     private String instagramUrl;
     private String facebookUrl;
+
+    @Column(name = "prezzo_coperto", nullable = false)
+    private BigDecimal prezzoCoperto = BigDecimal.ZERO;
 
     @Column(name = "sito_pubblicato", nullable = false)
     private Boolean sitoPubblicato = false;
@@ -139,6 +143,9 @@ public class Ristorante {
 
     public String getFacebookUrl() { return facebookUrl; }
     public void setFacebookUrl(String facebookUrl) { this.facebookUrl = facebookUrl; }
+
+    public BigDecimal getPrezzoCoperto() { return prezzoCoperto; }
+    public void setPrezzoCoperto(BigDecimal prezzoCoperto) { this.prezzoCoperto = prezzoCoperto; }
 
     public Boolean getSitoPubblicato() { return sitoPubblicato; }
     public void setSitoPubblicato(Boolean sitoPubblicato) { this.sitoPubblicato = sitoPubblicato; }

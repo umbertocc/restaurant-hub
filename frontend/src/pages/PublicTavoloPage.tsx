@@ -18,6 +18,7 @@ export default function PublicTavoloPage() {
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState<Record<number, CartItem>>({});
+  const [coperti, setCoperti] = useState(1);
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -67,7 +68,9 @@ export default function PublicTavoloPage() {
   };
 
   const cartItems = Object.values(cart);
-  const totale = cartItems.reduce((sum, ci) => sum + ci.item.prezzo * ci.quantita, 0);
+  const prezzoCoperto = Number(ristorante?.prezzoCoperto ?? 0);
+  const totaleProdotti = cartItems.reduce((sum, ci) => sum + ci.item.prezzo * ci.quantita, 0);
+  const totale = totaleProdotti + coperti * prezzoCoperto;
   const totalePezzi = cartItems.reduce((sum, ci) => sum + ci.quantita, 0);
 
   const handleOrdina = async () => {
@@ -78,6 +81,7 @@ export default function PublicTavoloPage() {
       await createOrdine({
         ristoranteId: parseInt(ristoranteId),
         tavoloId: parseInt(tavoloId),
+        coperti,
         items: cartItems.map((ci) => ({ menuItemId: ci.item.id, quantita: ci.quantita })),
         note: note || undefined,
       });
@@ -264,6 +268,22 @@ export default function PublicTavoloPage() {
       {cartItems.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-4">
           <div className="max-w-2xl mx-auto">
+            <div className="flex items-center justify-between mb-3">
+              <label htmlFor="coperti" className="text-sm font-medium text-gray-700">Numero coperti</label>
+              <input
+                id="coperti"
+                type="number"
+                min="1"
+                className="w-24 border border-gray-200 rounded-lg p-2 text-center"
+                value={coperti}
+                onChange={(e) => setCoperti(Math.max(1, parseInt(e.target.value, 10) || 1))}
+              />
+            </div>
+            {prezzoCoperto > 0 && (
+              <p className="text-xs text-gray-500 text-right mb-2">
+                Coperto: {coperti} × €{prezzoCoperto.toFixed(2)} = €{(coperti * prezzoCoperto).toFixed(2)}
+              </p>
+            )}
             <textarea
               className="w-full border border-gray-200 rounded-lg p-3 text-sm mb-3 resize-none focus:outline-none focus:ring-2 focus:ring-red-300"
               rows={2}

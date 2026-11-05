@@ -4,6 +4,7 @@ import com.example.restaurant.dto.OrdineDTO;
 import com.example.restaurant.model.MenuItem;
 import com.example.restaurant.model.Ordine;
 import com.example.restaurant.model.OrdineItem;
+import com.example.restaurant.repository.CopertoConfigRepository;
 import com.example.restaurant.repository.MenuItemRepository;
 import com.example.restaurant.print.PrintService;
 import com.example.restaurant.repository.OrdineRepository;
@@ -23,15 +24,18 @@ public class OrdineService {
     private final MenuItemRepository menuItemRepository;
     private final OrdineRealtimePublisher ordineRealtimePublisher;
     private final PrintService printService;
+    private final CopertoConfigRepository copertoConfigRepository;
 
     public OrdineService(OrdineRepository ordineRepository,
                          MenuItemRepository menuItemRepository,
                          OrdineRealtimePublisher ordineRealtimePublisher,
-                         PrintService printService) {
+                         PrintService printService,
+                         CopertoConfigRepository copertoConfigRepository) {
         this.ordineRepository = ordineRepository;
         this.menuItemRepository = menuItemRepository;
         this.ordineRealtimePublisher = ordineRealtimePublisher;
         this.printService = printService;
+        this.copertoConfigRepository = copertoConfigRepository;
     }
 
     @Transactional
@@ -41,6 +45,12 @@ public class OrdineService {
         ordine.setTavoloId(dto.getTavoloId());
         ordine.setPrenotazioneId(dto.getPrenotazioneId());
         ordine.setNote(dto.getNote());
+        ordine.setCoperti(dto.getCoperti());
+        BigDecimal prezzoCoperto = copertoConfigRepository.findById(dto.getRistoranteId())
+                .map(config -> config.getPrezzoCoperto())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                        "Prezzo coperto non sincronizzato. Riconnettersi e ricaricare il profilo del ristorante."));
+        ordine.setPrezzoCoperto(prezzoCoperto);
 
         BigDecimal totale = BigDecimal.ZERO;
 
@@ -68,7 +78,7 @@ public class OrdineService {
             totale = totale.add(item.getSubtotale());
         }
 
-        ordine.setTotale(totale);
+        ordine.setTotale(totale.add(prezzoCoperto.multiply(BigDecimal.valueOf(dto.getCoperti()))));
         Ordine saved = ordineRepository.save(ordine);
         ordineRealtimePublisher.publishCreated(saved);
         printService.printNewOrder(saved);

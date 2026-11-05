@@ -222,6 +222,18 @@ export default function ProfiloPage() {
               placeholder="https://..."
             />
           </div>
+          <div>
+            <label className="label">Prezzo coperto (€ a persona)</label>
+            <input
+              type="number"
+              className="input"
+              value={form.prezzoCoperto ?? 0}
+              onChange={(e) => set('prezzoCoperto', e.target.value)}
+              min="0"
+              step="0.01"
+              required
+            />
+          </div>
         </div>
 
         {error && (

@@ -31,6 +31,12 @@ public class Ordine {
     @Column(nullable = false)
     private BigDecimal totale = BigDecimal.ZERO;
 
+    @Column(nullable = false)
+    private Integer coperti = 1;
+
+    @Column(name = "prezzo_coperto", nullable = false)
+    private BigDecimal prezzoCoperto = BigDecimal.ZERO;
+
     private String note;
 
     @Column(name = "created_at")
@@ -67,6 +73,12 @@ public class Ordine {
 
     public BigDecimal getTotale() { return totale; }
     public void setTotale(BigDecimal totale) { this.totale = totale; }
+
+    public Integer getCoperti() { return coperti; }
+    public void setCoperti(Integer coperti) { this.coperti = coperti; }
+
+    public BigDecimal getPrezzoCoperto() { return prezzoCoperto; }
+    public void setPrezzoCoperto(BigDecimal prezzoCoperto) { this.prezzoCoperto = prezzoCoperto; }
 
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }

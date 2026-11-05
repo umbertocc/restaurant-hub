@@ -9,6 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.example.restaurant.repository.RistoranteRuoloRepository;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -85,6 +86,14 @@ public class RistoranteController {
         existing.setIndirizzo(aggiornato.getIndirizzo());
         existing.setCitta(aggiornato.getCitta());
         existing.setLogoUrl(aggiornato.getLogoUrl());
+        BigDecimal prezzoCoperto = aggiornato.getPrezzoCoperto();
+        if (prezzoCoperto != null) {
+            if (prezzoCoperto.signum() < 0 || prezzoCoperto.scale() > 2) {
+                throw new org.springframework.web.server.ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Il prezzo del coperto deve essere positivo o zero e avere al massimo due decimali");
+            }
+            existing.setPrezzoCoperto(prezzoCoperto);
+        }
         return ristoranteRepository.save(existing);
     }
     // PATCH /api/ristoranti/{id}/approva (solo superadmin)

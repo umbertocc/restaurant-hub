@@ -15,6 +15,7 @@ export interface Ristorante {
   indirizzo?: string;
   citta?: string;
   logoUrl?: string;
+  prezzoCoperto: number;
   piano: Piano;
   subscriptionStatus?: SubscriptionStatus;
   attivo: boolean;
@@ -126,6 +127,8 @@ export interface Ordine {
   prenotazioneId?: string;
   stato: StatoOrdine;
   totale: number;
+  coperti: number;
+  prezzoCoperto: number;
   note?: string;
   createdAt: string;
   chiusoAt?: string;
@@ -141,6 +144,7 @@ export interface OrdineItemDTO {
 export interface OrdineDTO {
   ristoranteId: number;
   tavoloId: number;
+  coperti: number;
   prenotazioneId?: string;
   items: OrdineItemDTO[];
   note?: string;

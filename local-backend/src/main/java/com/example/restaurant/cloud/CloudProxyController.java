@@ -1,6 +1,11 @@
 package com.example.restaurant.cloud;
 
+import com.example.restaurant.model.CopertoConfig;
+import com.example.restaurant.repository.CopertoConfigRepository;
 import com.example.restaurant.subscription.SubscriptionGate;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Inoltra al backend cloud le chiamate di autenticazione, registrazione e abbonamento.
+ * Inoltra al cloud autenticazione, profilo e abbonamento, sincronizzando il prezzo coperto locale.
  */
 @RestController
 public class CloudProxyController {
@@ -31,10 +36,17 @@ public class CloudProxyController {
 
     private final CloudClient cloud;
     private final SubscriptionGate subscriptionGate;
+    private final CopertoConfigRepository copertoConfigRepository;
+    private final ObjectMapper objectMapper;
 
-    public CloudProxyController(CloudClient cloud, SubscriptionGate subscriptionGate) {
+    public CloudProxyController(CloudClient cloud,
+                                SubscriptionGate subscriptionGate,
+                                CopertoConfigRepository copertoConfigRepository,
+                                ObjectMapper objectMapper) {
         this.cloud = cloud;
         this.subscriptionGate = subscriptionGate;
+        this.copertoConfigRepository = copertoConfigRepository;
+        this.objectMapper = objectMapper;
     }
 
     @RequestMapping({"/api/auth/**", "/api/ristoranti", "/api/ristoranti/**", "/api/billing/**"})
@@ -52,6 +64,7 @@ public class CloudProxyController {
 
         try {
             HttpResponse<byte[]> response = cloud.send(request.getMethod(), target, headers, body);
+            cacheCopertoPrice(request, response);
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (request.getRequestURI().startsWith("/api/billing/")
                     && response.statusCode() >= 200 && response.statusCode() < 300
@@ -68,6 +81,34 @@ public class CloudProxyController {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return unavailable();
+        }
+    }
+
+    private void cacheCopertoPrice(HttpServletRequest request, HttpResponse<byte[]> response) {
+        String path = request.getRequestURI();
+        String method = request.getMethod();
+        if (!path.matches("/api/ristoranti/\\d+") ||
+                !(method.equals("GET") || method.equals("PUT")) ||
+                response.statusCode() < 200 || response.statusCode() >= 300) {
+            return;
+        }
+
+        try {
+            JsonNode restaurant = objectMapper.readTree(response.body());
+            JsonNode id = restaurant.get("id");
+            JsonNode price = restaurant.get("prezzoCoperto");
+            if (id == null || !id.isNumber() || price == null || !price.isNumber()
+                    || price.decimalValue().signum() < 0) {
+                log.warn("Prezzo coperto non presente o non valido nella risposta cloud per {}", path);
+                return;
+            }
+
+            CopertoConfig config = new CopertoConfig();
+            config.setRistoranteId(id.longValue());
+            config.setPrezzoCoperto(price.decimalValue());
+            copertoConfigRepository.save(config);
+        } catch (JsonProcessingException e) {
+            log.warn("Impossibile leggere il prezzo coperto dalla risposta cloud per {}", path, e);
         }
     }
 

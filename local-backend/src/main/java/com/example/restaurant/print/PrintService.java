@@ -105,6 +105,7 @@ public class PrintService {
         write(out, new byte[]{0x1D, 0x21, 0x11});      // doppia dimensione
         text(out, reparto.name() + "\n");
         text(out, "TAVOLO " + tavolo + "\n");
+        text(out, "COPERTI " + ordine.getCoperti() + "\n");
         write(out, new byte[]{0x1D, 0x21, 0x00});
         text(out, OffsetDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) + "\n");
         write(out, new byte[]{0x1B, 0x61, 0x00});      // sinistra

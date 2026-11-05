@@ -80,6 +80,7 @@ export default function OrdineDetailPage() {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-xl font-bold text-gray-900 mb-1">Tavolo {ordine.tavoloId}</h1>
+            <p className="text-sm text-gray-600">{ordine.coperti} {ordine.coperti === 1 ? 'coperto' : 'coperti'}</p>
             <p className="text-sm text-gray-500 mt-1">
               Creato:{' '}
               {(() => {
@@ -145,6 +146,17 @@ export default function OrdineDetailPage() {
             </div>
           ))}
         </div>
+        {ordine.coperti > 0 && ordine.prezzoCoperto > 0 && (
+          <div className="flex items-center justify-between py-3 border-t border-gray-50">
+            <div>
+              <p className="text-sm font-medium text-gray-800">{ordine.coperti}× Coperto</p>
+              <p className="text-xs text-gray-400">€ {Number(ordine.prezzoCoperto).toFixed(2)} a persona</p>
+            </div>
+            <p className="text-sm font-semibold text-gray-900">
+              € {(ordine.coperti * Number(ordine.prezzoCoperto)).toFixed(2)}
+            </p>
+          </div>
+        )}
         <div className="flex justify-between items-center pt-4 mt-2 border-t border-gray-100">
           <span className="font-semibold text-gray-700">Totale</span>
           <span className="text-xl font-bold text-gray-900">€ {Number(ordine.totale).toFixed(2)}</span>

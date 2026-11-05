@@ -12,6 +12,10 @@ public class OrdineDTO {
     @NotNull
     private Long tavoloId;
 
+    @NotNull
+    @Min(1)
+    private Integer coperti = 1;
+
     private UUID prenotazioneId;
 
     @NotEmpty
@@ -45,6 +49,9 @@ public class OrdineDTO {
 
     public Long getTavoloId() { return tavoloId; }
     public void setTavoloId(Long tavoloId) { this.tavoloId = tavoloId; }
+
+    public Integer getCoperti() { return coperti; }
+    public void setCoperti(Integer coperti) { this.coperti = coperti; }
 
     public UUID getPrenotazioneId() { return prenotazioneId; }
     public void setPrenotazioneId(UUID prenotazioneId) { this.prenotazioneId = prenotazioneId; }

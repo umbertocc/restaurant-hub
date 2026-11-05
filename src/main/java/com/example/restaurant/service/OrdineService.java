@@ -4,8 +4,10 @@ import com.example.restaurant.dto.OrdineDTO;
 import com.example.restaurant.model.MenuItem;
 import com.example.restaurant.model.Ordine;
 import com.example.restaurant.model.OrdineItem;
+import com.example.restaurant.model.Ristorante;
 import com.example.restaurant.repository.MenuItemRepository;
 import com.example.restaurant.repository.OrdineRepository;
+import com.example.restaurant.repository.RistoranteRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,13 +22,16 @@ public class OrdineService {
 
     private final OrdineRepository ordineRepository;
     private final MenuItemRepository menuItemRepository;
+    private final RistoranteRepository ristoranteRepository;
     private final OrdineRealtimePublisher ordineRealtimePublisher;
 
     public OrdineService(OrdineRepository ordineRepository,
                          MenuItemRepository menuItemRepository,
+                         RistoranteRepository ristoranteRepository,
                          OrdineRealtimePublisher ordineRealtimePublisher) {
         this.ordineRepository = ordineRepository;
         this.menuItemRepository = menuItemRepository;
+        this.ristoranteRepository = ristoranteRepository;
         this.ordineRealtimePublisher = ordineRealtimePublisher;
     }
 
@@ -37,6 +42,11 @@ public class OrdineService {
         ordine.setTavoloId(dto.getTavoloId());
         ordine.setPrenotazioneId(dto.getPrenotazioneId());
         ordine.setNote(dto.getNote());
+        ordine.setCoperti(dto.getCoperti());
+        BigDecimal prezzoCoperto = ristoranteRepository.findById(dto.getRistoranteId())
+                .map(Ristorante::getPrezzoCoperto)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ristorante non trovato"));
+        ordine.setPrezzoCoperto(prezzoCoperto);
 
         BigDecimal totale = BigDecimal.ZERO;
 
@@ -64,7 +74,7 @@ public class OrdineService {
             totale = totale.add(item.getSubtotale());
         }
 
-        ordine.setTotale(totale);
+        ordine.setTotale(totale.add(prezzoCoperto.multiply(BigDecimal.valueOf(dto.getCoperti()))));
         Ordine saved = ordineRepository.save(ordine);
         ordineRealtimePublisher.publishCreated(saved);
         return saved;
