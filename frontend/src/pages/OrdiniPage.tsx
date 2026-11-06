@@ -68,6 +68,7 @@ export default function OrdiniPage() {
   // New order form state
   const [tavoloId, setTavoloId] = useState('');
   const [coperti, setCoperti] = useState(1);
+  const [copertiInput, setCopertiInput] = useState('1');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orderNote, setOrderNote] = useState('');
   const [creating, setCreating] = useState(false);
@@ -141,6 +142,7 @@ export default function OrdiniPage() {
       setCart([]);
       setTavoloId('');
       setCoperti(1);
+      setCopertiInput('1');
       setOrderNote('');
       setMenuSearch('');
       setMenuCatFilter('ALL');
@@ -275,8 +277,13 @@ export default function OrdiniPage() {
                   type="number"
                   min="1"
                   className="input"
-                  value={coperti}
-                  onChange={(e) => setCoperti(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  value={copertiInput}
+                  onChange={(e) => {
+                    setCopertiInput(e.target.value);
+                    const n = parseInt(e.target.value, 10);
+                    if (n >= 1) setCoperti(n);
+                  }}
+                  onBlur={() => setCopertiInput(String(coperti))}
                 />
                 {prezzoCoperto > 0 && (
                   <p className="text-xs text-gray-500 mt-1">
