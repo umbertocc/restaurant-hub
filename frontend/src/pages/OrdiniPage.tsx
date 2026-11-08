@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Plus, X, ShoppingCart, ChevronRight } from 'lucide-react';
+import { Plus, X, ShoppingCart, ChevronRight, TableProperties, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getOrdini, createOrdine, updateStatoOrdine } from '../api/ordini';
 import { getCategorieMenu, getMenu } from '../api/menu';
-import { Ordine, MenuItem, OrdineItemDTO, StatoOrdine, MenuCategoria } from '../types';
+import { getTavoli } from '../api/tavoli';
+import { ORDERS_CHANGED_EVENT } from '../realtime/ordersRealtime';
+import { Ordine, MenuItem, OrdineItemDTO, StatoOrdine, MenuCategoria, Tavolo } from '../types';
 
 const STATO_STYLE: Record<StatoOrdine, string> = {
   APERTO: 'badge bg-blue-100 text-blue-700',
@@ -59,9 +61,11 @@ function Spinner() {
 export default function OrdiniPage() {
   const { ristorante } = useAuth();
   const [ordini, setOrdini] = useState<Ordine[]>([]);
+  const [tavoli, setTavoli] = useState<Tavolo[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [categorie, setCategorie] = useState<MenuCategoria[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [filter, setFilter] = useState<StatoOrdine | 'ALL'>('APERTO');
   const [showModal, setShowModal] = useState(false);
 
@@ -77,20 +81,41 @@ export default function OrdiniPage() {
 
   const load = () => {
     if (!ristorante) return;
-    Promise.all([getOrdini(), getMenu(ristorante.id), getCategorieMenu(ristorante.id)])
-      .then(([o, m, c]) => {
+    Promise.all([getOrdini(), getMenu(ristorante.id), getCategorieMenu(ristorante.id), getTavoli()])
+      .then(([o, m, c, t]) => {
         const ordiniArr = (Array.isArray(o) ? o : []).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
         const menuArr = Array.isArray(m) ? m : [];
         setOrdini(ordiniArr);
+        setTavoli(Array.isArray(t) ? t : []);
         setMenuItems(menuArr.filter((i) => i.disponibile));
         setCategorie(Array.isArray(c) ? c : []);
       })
+      .catch(() => setLoadError('Errore nel caricamento di ordini e tavoli'))
       .finally(() => setLoading(false));
   };
 
   useEffect(load, [ristorante]);
 
+  useEffect(() => {
+    const onOrdersChanged = () => {
+      getOrdini()
+        .then((data) => {
+          const ordiniArr = (Array.isArray(data) ? data : [])
+            .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+          setOrdini(ordiniArr);
+          setLoadError('');
+        })
+        .catch(() => setLoadError('Errore nell’aggiornamento degli ordini'));
+    };
+
+    window.addEventListener(ORDERS_CHANGED_EVENT, onOrdersChanged);
+    return () => window.removeEventListener(ORDERS_CHANGED_EVENT, onOrdersChanged);
+  }, []);
+
   const filtered = filter === 'ALL' ? ordini : ordini.filter((o) => o.stato === filter);
+  const tavoliOrdinati = [...tavoli].sort((a, b) => a.numero - b.numero);
+  const statiOrdineAttivi: StatoOrdine[] = ['APERTO', 'IN_PREPARAZIONE', 'SERVITO'];
+  const ordiniAttivi = ordini.filter((o) => statiOrdineAttivi.includes(o.stato));
 
   const handleUpdateStato = async (id: string, stato: StatoOrdine) => {
     const updated = await updateStatoOrdine(id, stato);
@@ -173,6 +198,80 @@ export default function OrdiniPage() {
           Nuovo ordine
         </button>
       </div>
+
+      {loadError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+          {loadError}
+        </div>
+      )}
+
+      <section className="card">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Tavoli in sala</h2>
+            <p className="text-sm text-gray-500">Stato aggiornato in base agli ordini</p>
+          </div>
+          <div className="flex gap-3 text-xs font-medium">
+            <span className="flex items-center gap-1.5 text-green-700">
+              <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
+              {tavoliOrdinati.filter((t) => t.disponibile && !ordiniAttivi.some((o) => o.tavoloId === t.id)).length} liberi
+            </span>
+            <span className="flex items-center gap-1.5 text-red-700">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+              {tavoliOrdinati.filter((t) => ordiniAttivi.some((o) => o.tavoloId === t.id)).length} occupati
+            </span>
+          </div>
+        </div>
+
+        {tavoliOrdinati.length === 0 ? (
+          <p className="py-8 text-center text-sm text-gray-400">Nessun tavolo configurato</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {tavoliOrdinati.map((tavolo) => {
+              const ordineAttivo = ordiniAttivi.find((o) => o.tavoloId === tavolo.id);
+              const libero = tavolo.disponibile && !ordineAttivo;
+              const statoLabel = ordineAttivo
+                ? `Occupato · ${STATO_LABEL[ordineAttivo.stato]}`
+                : tavolo.disponibile
+                  ? 'Libero'
+                  : 'Non disponibile';
+              return (
+                <div
+                  key={tavolo.id}
+                  className={`rounded-xl border p-4 ${
+                    libero
+                      ? 'border-green-200 bg-green-50'
+                      : ordineAttivo
+                        ? 'border-red-200 bg-red-50'
+                        : 'border-gray-200 bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/80">
+                      <TableProperties className={`w-5 h-5 ${libero ? 'text-green-700' : ordineAttivo ? 'text-red-700' : 'text-gray-500'}`} />
+                    </div>
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                      libero
+                        ? 'bg-green-100 text-green-700'
+                        : ordineAttivo
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-gray-200 text-gray-600'
+                    }`}>
+                      {statoLabel}
+                    </span>
+                  </div>
+                  <p className="mt-3 font-semibold text-gray-900">Tavolo {tavolo.numero}</p>
+                  <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-600">
+                    <Users className="w-4 h-4" />
+                    {tavolo.capacita} {tavolo.capacita === 1 ? 'posto' : 'posti'}
+                  </p>
+                  {tavolo.posizione && <p className="mt-1 text-xs text-gray-500">{tavolo.posizione}</p>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {/* Status filter tabs */}
       <div className="flex gap-2 flex-wrap">
