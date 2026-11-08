@@ -10,6 +10,9 @@ export const getOrdine = (id: string) =>
 export const createOrdine = (data: OrdineDTO) =>
   client.post<Ordine>('/ordini', data).then((r) => r.data);
 
+export const updateOrdine = (id: string, data: OrdineDTO) =>
+  client.put<Ordine>(`/ordini/${id}`, data).then((r) => r.data);
+
 export const updateStatoOrdine = (id: string, stato: StatoOrdine) =>
   client
     .patch<Ordine>(`/ordini/${id}/stato`, null, { params: { stato } })

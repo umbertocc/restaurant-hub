@@ -1,5 +1,6 @@
 package com.example.restaurant.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +20,7 @@ public class OrdineDTO {
     private UUID prenotazioneId;
 
     @NotEmpty
-    private List<OrdineItemDTO> items;
+    private List<@Valid OrdineItemDTO> items;
 
     private String note;
 

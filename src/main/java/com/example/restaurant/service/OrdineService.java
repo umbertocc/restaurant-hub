@@ -15,7 +15,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class OrdineService {
@@ -77,6 +79,59 @@ public class OrdineService {
         ordine.setTotale(totale.add(prezzoCoperto.multiply(BigDecimal.valueOf(dto.getCoperti()))));
         Ordine saved = ordineRepository.save(ordine);
         ordineRealtimePublisher.publishCreated(saved);
+        return saved;
+    }
+
+    @Transactional
+    public Ordine aggiorna(UUID id, Long ristoranteId, OrdineDTO dto) {
+        Ordine ordine = getById(id);
+        if (!ordine.getRistoranteId().equals(ristoranteId)
+                || !ordine.getRistoranteId().equals(dto.getRistoranteId())
+                || !ordine.getTavoloId().equals(dto.getTavoloId())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordine non trovato");
+        }
+        if (ordine.getStato() == Ordine.Stato.CHIUSO || ordine.getStato() == Ordine.Stato.ANNULLATO) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "L'ordine non è più modificabile");
+        }
+
+        Set<Long> itemGiaPresenti = ordine.getItems().stream()
+                .map(OrdineItem::getMenuItemId)
+                .collect(Collectors.toSet());
+        ordine.getItems().clear();
+        BigDecimal totale = BigDecimal.ZERO;
+
+        for (OrdineDTO.OrdineItemDTO itemDto : dto.getItems()) {
+            MenuItem menuItem = menuItemRepository.findById(itemDto.getMenuItemId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "MenuItem non trovato: " + itemDto.getMenuItemId()));
+            if (!menuItem.getRistoranteId().equals(ristoranteId)) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "MenuItem non trovato: " + itemDto.getMenuItemId());
+            }
+            if (!menuItem.getDisponibile() && !itemGiaPresenti.contains(menuItem.getId())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Prodotto non disponibile: " + menuItem.getNome());
+            }
+
+            OrdineItem item = new OrdineItem();
+            item.setOrdine(ordine);
+            item.setMenuItemId(menuItem.getId());
+            item.setQuantita(itemDto.getQuantita());
+            item.setPrezzoUnitario(menuItem.getPrezzo());
+            item.setNote(itemDto.getNote());
+            item.setNomeMenuItem(menuItem.getNome());
+            item.setCategoria(menuItem.getCategoria().getNome());
+            item.setDestinazione(menuItem.getCategoria().getDestinazione().name());
+            ordine.getItems().add(item);
+            totale = totale.add(item.getSubtotale());
+        }
+
+        ordine.setCoperti(dto.getCoperti());
+        ordine.setNote(dto.getNote());
+        ordine.setTotale(totale.add(ordine.getPrezzoCoperto()
+                .multiply(BigDecimal.valueOf(dto.getCoperti()))));
+        Ordine saved = ordineRepository.save(ordine);
+        ordineRealtimePublisher.publishStatusUpdated(saved);
         return saved;
     }
 

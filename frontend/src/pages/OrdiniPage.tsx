@@ -4,7 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Plus, X, ShoppingCart, ChevronRight, TableProperties, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getOrdini, createOrdine, updateStatoOrdine } from '../api/ordini';
+import { getOrdini, createOrdine, updateOrdine, updateStatoOrdine } from '../api/ordini';
 import { getCategorieMenu, getMenu } from '../api/menu';
 import { getTavoli } from '../api/tavoli';
 import { ORDERS_CHANGED_EVENT } from '../realtime/ordersRealtime';
@@ -43,7 +43,7 @@ const FILTERS: { label: string; value: StatoOrdine | 'ALL' }[] = [
   { label: 'Annullati', value: 'ANNULLATO' },
 ];
 
-interface CartItem { menuItem: MenuItem; quantita: number; note: string }
+interface CartItem { menuItemId: number; nome: string; prezzo: number; quantita: number; note: string }
 
 function safeFormat(iso: string): string {
   try { return format(parseISO(iso), "d MMM yyyy 'alle' HH:mm", { locale: it }); }
@@ -68,6 +68,7 @@ export default function OrdiniPage() {
   const [loadError, setLoadError] = useState('');
   const [filter, setFilter] = useState<StatoOrdine | 'ALL'>('APERTO');
   const [showModal, setShowModal] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<Ordine | null>(null);
 
   // New order form state
   const [tavoloId, setTavoloId] = useState('');
@@ -76,6 +77,7 @@ export default function OrdiniPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orderNote, setOrderNote] = useState('');
   const [creating, setCreating] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [menuSearch, setMenuSearch] = useState('');
   const [menuCatFilter, setMenuCatFilter] = useState<number | 'ALL'>('ALL');
 
@@ -87,7 +89,7 @@ export default function OrdiniPage() {
         const menuArr = Array.isArray(m) ? m : [];
         setOrdini(ordiniArr);
         setTavoli(Array.isArray(t) ? t : []);
-        setMenuItems(menuArr.filter((i) => i.disponibile));
+        setMenuItems(menuArr);
         setCategorie(Array.isArray(c) ? c : []);
       })
       .catch(() => setLoadError('Errore nel caricamento di ordini e tavoli'))
@@ -116,6 +118,9 @@ export default function OrdiniPage() {
   const tavoliOrdinati = [...tavoli].sort((a, b) => a.numero - b.numero);
   const statiOrdineAttivi: StatoOrdine[] = ['APERTO', 'IN_PREPARAZIONE', 'SERVITO'];
   const ordiniAttivi = ordini.filter((o) => statiOrdineAttivi.includes(o.stato));
+  const tavoliLiberi = tavoliOrdinati.filter(
+    (t) => t.disponibile && !ordiniAttivi.some((o) => o.tavoloId === t.id),
+  );
 
   const handleUpdateStato = async (id: string, stato: StatoOrdine) => {
     const updated = await updateStatoOrdine(id, stato);
@@ -124,46 +129,99 @@ export default function OrdiniPage() {
 
   const addToCart = (item: MenuItem) => {
     setCart((prev) => {
-      const existing = prev.find((c) => c.menuItem.id === item.id);
+      const existing = prev.find((c) => c.menuItemId === item.id);
       if (existing) {
         return prev.map((c) =>
-          c.menuItem.id === item.id ? { ...c, quantita: c.quantita + 1 } : c,
+          c.menuItemId === item.id ? { ...c, quantita: c.quantita + 1 } : c,
         );
       }
-      return [...prev, { menuItem: item, quantita: 1, note: '' }];
+      return [...prev, { menuItemId: item.id, nome: item.nome, prezzo: Number(item.prezzo), quantita: 1, note: '' }];
     });
   };
 
   const removeFromCart = (id: number) =>
-    setCart((prev) => prev.filter((c) => c.menuItem.id !== id));
+    setCart((prev) => prev.filter((c) => c.menuItemId !== id));
 
   const updateCartQty = (id: number, q: number) => {
     if (q <= 0) { removeFromCart(id); return; }
-    setCart((prev) => prev.map((c) => (c.menuItem.id === id ? { ...c, quantita: q } : c)));
+    setCart((prev) => prev.map((c) => (c.menuItemId === id ? { ...c, quantita: q } : c)));
   };
 
-  const prodottiTotal = cart.reduce((s, c) => s + Number(c.menuItem.prezzo) * c.quantita, 0);
-  const prezzoCoperto = Number(ristorante?.prezzoCoperto ?? 0);
+  const prodottiTotal = cart.reduce((s, c) => s + c.prezzo * c.quantita, 0);
+  const prezzoCoperto = Number(editingOrder?.prezzoCoperto ?? ristorante?.prezzoCoperto ?? 0);
   const cartTotal = prodottiTotal + coperti * prezzoCoperto;
 
-  const handleCreate = async () => {
+  const openNewOrder = (tavolo?: Tavolo) => {
+    setEditingOrder(null);
+    setTavoloId(tavolo ? String(tavolo.id) : '');
+    setCoperti(1);
+    setCopertiInput('1');
+    setCart([]);
+    setOrderNote('');
+    setSaveError('');
+    setMenuSearch('');
+    setMenuCatFilter('ALL');
+    setShowModal(true);
+  };
+
+  const openOrderForTable = (tavolo: Tavolo) => {
+    const ordine = ordiniAttivi.find((o) => o.tavoloId === tavolo.id);
+    if (!ordine) {
+      if (tavolo.disponibile) openNewOrder(tavolo);
+      return;
+    }
+
+    setEditingOrder(ordine);
+    setTavoloId(String(tavolo.id));
+    setCoperti(ordine.coperti);
+    setCopertiInput(String(ordine.coperti));
+    setCart(ordine.items.map((item) => {
+      const menuItem = menuItems.find((m) => m.id === item.menuItemId);
+      return {
+        menuItemId: item.menuItemId,
+        nome: menuItem?.nome ?? item.nomeMenuItem ?? `Prodotto ${item.menuItemId}`,
+        prezzo: Number(menuItem?.prezzo ?? item.prezzoUnitario),
+        quantita: item.quantita,
+        note: item.note ?? '',
+      };
+    }));
+    setOrderNote(ordine.note ?? '');
+    setSaveError('');
+    setShowModal(true);
+  };
+
+  const closeOrderModal = () => {
+    if (creating) return;
+    setShowModal(false);
+    setEditingOrder(null);
+    setSaveError('');
+  };
+
+  const handleSave = async () => {
     if (!ristorante || !tavoloId || cart.length === 0) return;
     setCreating(true);
+    setSaveError('');
     try {
       const items: OrdineItemDTO[] = cart.map((c) => ({
-        menuItemId: c.menuItem.id,
+        menuItemId: c.menuItemId,
         quantita: c.quantita,
         note: c.note || undefined,
       }));
-      const newOrdine = await createOrdine({
+      const data = {
         ristoranteId: ristorante.id,
         tavoloId: parseInt(tavoloId),
         coperti,
         items,
         note: orderNote || undefined,
-      });
-      setOrdini((prev) => [newOrdine, ...prev]);
+      };
+      const savedOrdine = editingOrder
+        ? await updateOrdine(editingOrder.id, data)
+        : await createOrdine(data);
+      setOrdini((prev) => editingOrder
+        ? prev.map((o) => (o.id === savedOrdine.id ? savedOrdine : o))
+        : [savedOrdine, ...prev]);
       setShowModal(false);
+      setEditingOrder(null);
       setCart([]);
       setTavoloId('');
       setCoperti(1);
@@ -171,6 +229,8 @@ export default function OrdiniPage() {
       setOrderNote('');
       setMenuSearch('');
       setMenuCatFilter('ALL');
+    } catch {
+      setSaveError('Errore nel salvataggio dell’ordine. Riprova.');
     } finally {
       setCreating(false);
     }
@@ -181,7 +241,7 @@ export default function OrdiniPage() {
     const matchCat = menuCatFilter === 'ALL'
       ? true
       : m.categoria.id === menuCatFilter;
-    return matchSearch && matchCat;
+    return m.disponibile && matchSearch && matchCat;
   });
 
   if (loading) return <Spinner />;
@@ -193,7 +253,7 @@ export default function OrdiniPage() {
           <h1 className="page-title">Ordini</h1>
           <p className="text-sm text-gray-500 mt-0.5">{ordini.length} ordini totali</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="btn-primary gap-2">
+        <button onClick={() => openNewOrder()} disabled={tavoliLiberi.length === 0} className="btn-primary gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
           <Plus className="w-4 h-4" />
           Nuovo ordine
         </button>
@@ -236,15 +296,19 @@ export default function OrdiniPage() {
                   ? 'Libero'
                   : 'Non disponibile';
               return (
-                <div
+                <button
                   key={tavolo.id}
-                  className={`rounded-xl border p-4 ${
+                  type="button"
+                  onClick={() => openOrderForTable(tavolo)}
+                  disabled={!ordineAttivo && !tavolo.disponibile}
+                  aria-label={`Tavolo ${tavolo.numero}, ${statoLabel}, ${tavolo.capacita} posti`}
+                  className={`rounded-xl border p-4 text-left transition-shadow ${
                     libero
                       ? 'border-green-200 bg-green-50'
                       : ordineAttivo
                         ? 'border-red-200 bg-red-50'
                         : 'border-gray-200 bg-gray-50'
-                  }`}
+                  } ${tavolo.disponibile || ordineAttivo ? 'hover:shadow-md cursor-pointer' : 'cursor-not-allowed opacity-75'}`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/80">
@@ -266,7 +330,7 @@ export default function OrdiniPage() {
                     {tavolo.capacita} {tavolo.capacita === 1 ? 'posto' : 'posti'}
                   </p>
                   {tavolo.posizione && <p className="mt-1 text-xs text-gray-500">{tavolo.posizione}</p>}
-                </div>
+                </button>
               );
             })}
           </div>
@@ -351,24 +415,35 @@ export default function OrdiniPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b">
-              <h2 className="text-lg font-semibold">Nuovo ordine</h2>
-              <button onClick={() => setShowModal(false)} className="btn-ghost p-1.5">
+              <h2 className="text-lg font-semibold">
+                {editingOrder ? `Modifica ordine · Tavolo ${tavoli.find((t) => t.id === editingOrder.tavoloId)?.numero ?? editingOrder.tavoloId}` : 'Nuovo ordine'}
+              </h2>
+              <button onClick={closeOrderModal} className="btn-ghost p-1.5" disabled={creating}>
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="p-6 space-y-5">
-              {/* Table number */}
               <div className="max-w-xs">
-                <label className="label">Numero tavolo *</label>
-                <input
-                  type="number"
-                  min="1"
-                  className="input"
-                  placeholder="Es. 4"
-                  value={tavoloId}
-                  onChange={(e) => setTavoloId(e.target.value)}
-                />
+                <label className="label">Tavolo *</label>
+                {editingOrder ? (
+                  <p className="input bg-gray-50">
+                    Tavolo {tavoli.find((t) => t.id === editingOrder.tavoloId)?.numero ?? editingOrder.tavoloId}
+                  </p>
+                ) : (
+                  <select
+                    className="input"
+                    value={tavoloId}
+                    onChange={(e) => setTavoloId(e.target.value)}
+                  >
+                    <option value="">Seleziona un tavolo libero</option>
+                    {tavoliLiberi.map((tavolo) => (
+                      <option key={tavolo.id} value={tavolo.id}>
+                        Tavolo {tavolo.numero} · {tavolo.capacita} {tavolo.capacita === 1 ? 'posto' : 'posti'}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
               <div className="max-w-xs">
                 <label className="label">Numero coperti *</label>
@@ -441,25 +516,25 @@ export default function OrdiniPage() {
                   <div className="space-y-2">
                     {cart.map((c) => (
                       <div
-                        key={c.menuItem.id}
+                        key={c.menuItemId}
                         className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
                       >
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-800">{c.menuItem.nome}</p>
-                          <p className="text-xs text-gray-400">€{Number(c.menuItem.prezzo).toFixed(2)} × {c.quantita} = €{(Number(c.menuItem.prezzo) * c.quantita).toFixed(2)}</p>
+                          <p className="text-sm font-medium text-gray-800">{c.nome}</p>
+                          <p className="text-xs text-gray-400">€{c.prezzo.toFixed(2)} × {c.quantita} = €{(c.prezzo * c.quantita).toFixed(2)}</p>
                         </div>
                         <div className="flex items-center gap-1">
                           <button
-                            onClick={() => updateCartQty(c.menuItem.id, c.quantita - 1)}
+                            onClick={() => updateCartQty(c.menuItemId, c.quantita - 1)}
                             className="w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center justify-center text-xs font-bold"
                           >−</button>
                           <span className="w-6 text-center text-sm font-semibold">{c.quantita}</span>
                           <button
-                            onClick={() => updateCartQty(c.menuItem.id, c.quantita + 1)}
+                            onClick={() => updateCartQty(c.menuItemId, c.quantita + 1)}
                             className="w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center justify-center text-xs font-bold"
                           >+</button>
                           <button
-                            onClick={() => removeFromCart(c.menuItem.id)}
+                            onClick={() => removeFromCart(c.menuItemId)}
                             className="ml-1 p-1 text-red-400 hover:text-red-600"
                           ><X className="w-3.5 h-3.5" /></button>
                         </div>
@@ -483,16 +558,21 @@ export default function OrdiniPage() {
                   onChange={(e) => setOrderNote(e.target.value)}
                 />
               </div>
+              {saveError && (
+                <div role="alert" className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                  {saveError}
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 px-6 py-4 border-t">
-              <button onClick={() => setShowModal(false)} className="btn-secondary">Annulla</button>
+              <button onClick={closeOrderModal} className="btn-secondary" disabled={creating}>Annulla</button>
               <button
-                onClick={handleCreate}
+                onClick={handleSave}
                 disabled={creating || !tavoloId || cart.length === 0}
                 className="btn-primary"
               >
-                {creating ? 'Creazione…' : 'Crea ordine'}
+                {creating ? 'Salvataggio…' : editingOrder ? 'Salva modifiche' : 'Crea ordine'}
               </button>
             </div>
           </div>

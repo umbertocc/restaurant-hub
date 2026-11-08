@@ -28,6 +28,15 @@ public class OrdineController {
         return ordineService.crea(dto);
     }
 
+    // PUT /api/ordini/{id}
+    @PutMapping("/{id}")
+    public Ordine aggiorna(@PathVariable UUID id,
+                           @Valid @RequestBody OrdineDTO dto,
+                           HttpServletRequest request) {
+        Long ristoranteId = (Long) request.getAttribute("ristoranteId");
+        return ordineService.aggiorna(id, ristoranteId, dto);
+    }
+
     // GET /api/ordini/{id}
     @GetMapping("/{id}")
     public Ordine getById(@PathVariable UUID id) {
