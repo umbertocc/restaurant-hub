@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, isToday, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { getOrdini } from '../api/ordini';
 import { getPrenotazioni } from '../api/prenotazioni';
 import { Ordine, Prenotazione } from '../types';
+import { ORDERS_CHANGED_EVENT } from '../realtime/ordersRealtime';
 
 const STATO_ORDINE_STYLE: Record<string, string> = {
   APERTO: 'badge bg-blue-100 text-blue-700',
@@ -37,7 +38,7 @@ export default function DashboardPage() {
   const [prenotazioni, setPrenotazioni] = useState<Prenotazione[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const caricaDati = useCallback(() => {
     if (!ristorante) return;
     Promise.all([getOrdini(), getPrenotazioni()])
       .then(([o, p]) => {
@@ -46,6 +47,12 @@ export default function DashboardPage() {
       })
       .finally(() => setLoading(false));
   }, [ristorante]);
+
+  useEffect(() => {
+    caricaDati();
+    window.addEventListener(ORDERS_CHANGED_EVENT, caricaDati);
+    return () => window.removeEventListener(ORDERS_CHANGED_EVENT, caricaDati);
+  }, [caricaDati]);
 
   const activeOrders = ordini.filter(
     (o) => o.stato === 'APERTO' || o.stato === 'IN_PREPARAZIONE',

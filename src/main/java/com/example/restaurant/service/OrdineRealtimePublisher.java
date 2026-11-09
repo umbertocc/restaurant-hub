@@ -24,6 +24,10 @@ public class OrdineRealtimePublisher {
         publish("STATUS_UPDATED", ordine);
     }
 
+    public void publishOrderUpdated(Ordine ordine) {
+        publish("ORDER_UPDATED", ordine);
+    }
+
     private void publish(String type, Ordine ordine) {
         if (ordine == null || ordine.getRistoranteId() == null || ordine.getId() == null) {
             return;

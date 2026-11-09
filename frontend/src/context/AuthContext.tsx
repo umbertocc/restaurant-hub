@@ -28,7 +28,7 @@ interface AuthContextValue {
   profiloBloccato: boolean;
   refreshRistorante: (r: Ristorante) => void;
   isAuthenticated: boolean;
-  newOrderAlert: boolean;
+  orderAlertMessage: string | null;
   dismissOrderAlert: () => void;
   profilo: Profilo;
   setProfilo: (p: Profilo) => void;
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem('rh_ruoli');
     return stored ? JSON.parse(stored) : [];
   });
-  const [newOrderAlert, setNewOrderAlert] = useState(false);
+  const [orderAlertMessage, setOrderAlertMessage] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   // Profilo imposto dal codice dispositivo: non modificabile dall'utente
   const [profiloDispositivo, setProfiloDispositivo] = useState<Profilo | null>(
@@ -134,12 +134,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const handleOrderChanged = useCallback((payload: OrdineRealtimeMessage) => {
-    // Suono e banner solo quando arriva un ordine nuovo.
-    if (payload.type !== 'CREATED') return;
+    if (payload.type !== 'CREATED' && payload.type !== 'ORDER_UPDATED') return;
     if (isOnOrdiniRoute()) return;
     playBeep();
-    setNewOrderAlert(true);
-    window.setTimeout(() => setNewOrderAlert(false), 5000);
+    setOrderAlertMessage(payload.type === 'CREATED' ? 'Nuovo ordine ricevuto!' : 'Ordine modificato!');
+    window.setTimeout(() => setOrderAlertMessage(null), 5000);
   }, [playBeep, isOnOrdiniRoute]);
 
   useEffect(() => {
@@ -215,7 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRistorante(r);
   }, []);
 
-  const dismissOrderAlert = useCallback(() => setNewOrderAlert(false), []);
+  const dismissOrderAlert = useCallback(() => setOrderAlertMessage(null), []);
 
   const trialDaysLeft = useMemo(() => {
     if (ristorante?.subscriptionStatus === 'ACTIVE_PAID') return null;
@@ -235,7 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ token, ristorante, ruoli, login, logout, profiloBloccato: !!profiloDispositivo, refreshRistorante, isAuthenticated: !!token, newOrderAlert, dismissOrderAlert, profilo, setProfilo, trialExpired, trialDaysLeft }}
+      value={{ token, ristorante, ruoli, login, logout, profiloBloccato: !!profiloDispositivo, refreshRistorante, isAuthenticated: !!token, orderAlertMessage, dismissOrderAlert, profilo, setProfilo, trialExpired, trialDaysLeft }}
     >
       {children}
     </AuthContext.Provider>

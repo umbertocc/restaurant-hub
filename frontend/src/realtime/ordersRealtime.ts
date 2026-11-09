@@ -3,7 +3,7 @@ import { Client } from '@stomp/stompjs';
 export const ORDERS_CHANGED_EVENT = 'rh:orders-changed';
 
 export interface OrdineRealtimeMessage {
-  type: 'CREATED' | 'STATUS_UPDATED';
+  type: 'CREATED' | 'ORDER_UPDATED' | 'STATUS_UPDATED';
   ordineId: string;
   stato: string;
   ristoranteId: number;

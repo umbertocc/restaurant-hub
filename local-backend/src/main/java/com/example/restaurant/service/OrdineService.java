@@ -136,7 +136,7 @@ public class OrdineService {
         ordine.setTotale(totale.add(ordine.getPrezzoCoperto()
                 .multiply(BigDecimal.valueOf(dto.getCoperti()))));
         Ordine saved = ordineRepository.save(ordine);
-        ordineRealtimePublisher.publishStatusUpdated(saved);
+        ordineRealtimePublisher.publishOrderUpdated(saved);
         return saved;
     }
 
