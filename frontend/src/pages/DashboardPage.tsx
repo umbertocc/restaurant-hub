@@ -55,7 +55,7 @@ export default function DashboardPage() {
   }, [caricaDati]);
 
   const activeOrders = ordini.filter(
-    (o) => o.stato === 'APERTO' || o.stato === 'IN_PREPARAZIONE',
+    (o) => o.stato === 'APERTO' || o.stato === 'IN_PREPARAZIONE' || o.stato === 'SERVITO',
   );
   const todayReservations = prenotazioni.filter((p) => {
     try { return isToday(parseISO(p.dataOra)); } catch { return false; }
