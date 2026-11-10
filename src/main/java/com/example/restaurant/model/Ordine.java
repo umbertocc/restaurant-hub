@@ -53,7 +53,7 @@ public class Ordine {
         createdAt = OffsetDateTime.now();
     }
 
-    public enum Stato { APERTO, IN_PREPARAZIONE, SERVITO, CHIUSO, ANNULLATO }
+    public enum Stato { APERTO, IN_PREPARAZIONE, SERVITO, CHIUSO, PAGATO, ANNULLATO }
 
     // Getters & Setters
     public UUID getId() { return id; }

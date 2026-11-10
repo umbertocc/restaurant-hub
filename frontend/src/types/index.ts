@@ -106,6 +106,7 @@ export type StatoOrdine =
   | 'IN_PREPARAZIONE'
   | 'SERVITO'
   | 'CHIUSO'
+  | 'PAGATO'
   | 'ANNULLATO';
 
 export interface OrdineItem {

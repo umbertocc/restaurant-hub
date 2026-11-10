@@ -11,6 +11,7 @@ const STATO_STYLE: Record<StatoOrdine, string> = {
   IN_PREPARAZIONE: 'badge bg-amber-100 text-amber-700',
   SERVITO: 'badge bg-green-100 text-green-700',
   CHIUSO: 'badge bg-gray-100 text-gray-500',
+  PAGATO: 'badge bg-purple-100 text-purple-700',
   ANNULLATO: 'badge bg-red-100 text-red-700',
 };
 
@@ -19,6 +20,7 @@ const STATO_LABEL: Record<StatoOrdine, string> = {
   IN_PREPARAZIONE: 'In Preparazione',
   SERVITO: 'Servito',
   CHIUSO: 'Chiuso',
+  PAGATO: 'Pagato',
   ANNULLATO: 'Annullato',
 };
 
@@ -27,6 +29,7 @@ const STATI_AVANZAMENTO: Record<StatoOrdine, StatoOrdine | null> = {
   IN_PREPARAZIONE: 'SERVITO',
   SERVITO: 'CHIUSO',
   CHIUSO: null,
+  PAGATO: null,
   ANNULLATO: null,
 };
 

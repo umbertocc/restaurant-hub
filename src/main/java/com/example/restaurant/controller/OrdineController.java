@@ -56,4 +56,10 @@ public class OrdineController {
                                 @RequestParam Ordine.Stato stato) {
         return ordineService.aggiornaStato(id, stato);
     }
+
+    @PatchMapping("/{id}/chiudi-tavolo")
+    public Ordine chiudiTavolo(@PathVariable UUID id, HttpServletRequest request) {
+        Long ristoranteId = (Long) request.getAttribute("ristoranteId");
+        return ordineService.chiudiTavolo(id, ristoranteId);
+    }
 }

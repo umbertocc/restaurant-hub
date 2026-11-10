@@ -90,7 +90,9 @@ public class OrdineService {
                 || !ordine.getTavoloId().equals(dto.getTavoloId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordine non trovato");
         }
-        if (ordine.getStato() == Ordine.Stato.CHIUSO || ordine.getStato() == Ordine.Stato.ANNULLATO) {
+        if (ordine.getStato() == Ordine.Stato.CHIUSO
+                || ordine.getStato() == Ordine.Stato.PAGATO
+                || ordine.getStato() == Ordine.Stato.ANNULLATO) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "L'ordine non è più modificabile");
         }
 
@@ -148,8 +150,28 @@ public class OrdineService {
 
     @Transactional
     public Ordine aggiornaStato(UUID id, Ordine.Stato nuovoStato) {
+        if (nuovoStato == Ordine.Stato.PAGATO) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Per chiudere il tavolo usa l'azione dedicata");
+        }
         Ordine ordine = getById(id);
         ordine.setStato(nuovoStato);
+        Ordine saved = ordineRepository.save(ordine);
+        ordineRealtimePublisher.publishStatusUpdated(saved);
+        return saved;
+    }
+
+    @Transactional
+    public Ordine chiudiTavolo(UUID id, Long ristoranteId) {
+        Ordine ordine = getById(id);
+        if (!ordine.getRistoranteId().equals(ristoranteId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordine non trovato");
+        }
+        if (ordine.getStato() != Ordine.Stato.CHIUSO) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Il tavolo può essere chiuso solo dopo la consegna dell'ordine");
+        }
+        ordine.setStato(Ordine.Stato.PAGATO);
         Ordine saved = ordineRepository.save(ordine);
         ordineRealtimePublisher.publishStatusUpdated(saved);
         return saved;

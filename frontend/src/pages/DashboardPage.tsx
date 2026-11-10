@@ -2,19 +2,29 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, isToday, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { ShoppingCart, Calendar, Clock, TrendingUp, ChefHat } from 'lucide-react';
+import { ShoppingCart, Calendar, Clock, TrendingUp, ChefHat, CheckCircle, TableProperties, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getOrdini } from '../api/ordini';
+import { chiudiTavolo, getOrdini } from '../api/ordini';
 import { getPrenotazioni } from '../api/prenotazioni';
-import { Ordine, Prenotazione } from '../types';
+import { getTavoli } from '../api/tavoli';
+import { Ordine, Prenotazione, Tavolo } from '../types';
 import { ORDERS_CHANGED_EVENT } from '../realtime/ordersRealtime';
+import { getOrdiniOccupantiTavolo } from '../utils/ordini';
 
 const STATO_ORDINE_STYLE: Record<string, string> = {
   APERTO: 'badge bg-blue-100 text-blue-700',
   IN_PREPARAZIONE: 'badge bg-amber-100 text-amber-700',
   SERVITO: 'badge bg-green-100 text-green-700',
   CHIUSO: 'badge bg-gray-100 text-gray-500',
+  PAGATO: 'badge bg-purple-100 text-purple-700',
   ANNULLATO: 'badge bg-red-100 text-red-700',
+};
+
+const STATO_ORDINE_LABEL: Record<string, string> = {
+  APERTO: 'Aperto',
+  IN_PREPARAZIONE: 'In Preparazione',
+  SERVITO: 'Servito',
+  CHIUSO: 'Chiuso',
 };
 
 const STATO_PREN_STYLE: Record<string, string> = {
@@ -36,15 +46,22 @@ export default function DashboardPage() {
   const { ristorante } = useAuth();
   const [ordini, setOrdini] = useState<Ordine[]>([]);
   const [prenotazioni, setPrenotazioni] = useState<Prenotazione[]>([]);
+  const [tavoli, setTavoli] = useState<Tavolo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [tableActionError, setTableActionError] = useState('');
+  const [closingOrderId, setClosingOrderId] = useState<string | null>(null);
 
   const caricaDati = useCallback(() => {
     if (!ristorante) return;
-    Promise.all([getOrdini(), getPrenotazioni()])
-      .then(([o, p]) => {
+    Promise.all([getOrdini(), getPrenotazioni(), getTavoli()])
+      .then(([o, p, t]) => {
         setOrdini(Array.isArray(o) ? o : []);
         setPrenotazioni(Array.isArray(p) ? p : []);
+        setTavoli(Array.isArray(t) ? t : []);
+        setLoadError('');
       })
+      .catch(() => setLoadError('Errore nel caricamento della dashboard'))
       .finally(() => setLoading(false));
   }, [ristorante]);
 
@@ -57,6 +74,25 @@ export default function DashboardPage() {
   const activeOrders = ordini.filter(
     (o) => o.stato === 'APERTO' || o.stato === 'IN_PREPARAZIONE' || o.stato === 'SERVITO',
   );
+  const tavoliOrdinati = [...tavoli].sort((a, b) => a.numero - b.numero);
+  const ordiniAttivi = getOrdiniOccupantiTavolo(ordini);
+  const tavoliLiberi = tavoliOrdinati.filter(
+    (t) => t.disponibile && !ordiniAttivi.some((o) => o.tavoloId === t.id),
+  );
+
+  const handleCloseTable = async (ordine: Ordine) => {
+    setClosingOrderId(ordine.id);
+    setTableActionError('');
+    try {
+      const updated = await chiudiTavolo(ordine.id);
+      setOrdini((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
+    } catch {
+      setTableActionError('Errore nella chiusura del tavolo. Riprova.');
+    } finally {
+      setClosingOrderId(null);
+    }
+  };
+
   const todayReservations = prenotazioni.filter((p) => {
     try { return isToday(parseISO(p.dataOra)); } catch { return false; }
   });
@@ -92,6 +128,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
+      {loadError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">{loadError}</div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {stats.map((s) => (
           <Link key={s.label} to={s.link} className="card hover:shadow-md transition-shadow">
@@ -107,6 +146,92 @@ export default function DashboardPage() {
           </Link>
         ))}
       </div>
+
+      <section className="card">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Tavoli in sala</h2>
+            <p className="text-sm text-gray-500">Il tavolo resta occupato fino alla chiusura dopo il pagamento</p>
+          </div>
+          <div className="flex gap-3 text-xs font-medium">
+            <span className="flex items-center gap-1.5 text-green-700">
+              <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
+              {tavoliLiberi.length} liberi
+            </span>
+            <span className="flex items-center gap-1.5 text-red-700">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+              {ordiniAttivi.filter((o) => tavoliOrdinati.some((t) => t.id === o.tavoloId)).length} occupati
+            </span>
+          </div>
+        </div>
+
+        {tableActionError && (
+          <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+            {tableActionError}
+          </div>
+        )}
+
+        {tavoliOrdinati.length === 0 ? (
+          <p className="py-8 text-center text-sm text-gray-400">Nessun tavolo configurato</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {tavoliOrdinati.map((tavolo) => {
+              const ordineAttivo = ordiniAttivi.find((o) => o.tavoloId === tavolo.id);
+              const libero = tavolo.disponibile && !ordineAttivo;
+              const statoLabel = ordineAttivo
+                ? `Occupato · ${STATO_ORDINE_LABEL[ordineAttivo.stato]}`
+                : tavolo.disponibile
+                  ? 'Libero'
+                  : 'Non disponibile';
+              return (
+                <div
+                  key={tavolo.id}
+                  aria-label={`Tavolo ${tavolo.numero}, ${statoLabel}, ${tavolo.capacita} posti`}
+                  className={`rounded-xl border p-4 ${
+                    libero
+                      ? 'border-green-200 bg-green-50'
+                      : ordineAttivo
+                        ? 'border-red-200 bg-red-50'
+                        : 'border-gray-200 bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/80">
+                      <TableProperties className={`w-5 h-5 ${libero ? 'text-green-700' : ordineAttivo ? 'text-red-700' : 'text-gray-500'}`} />
+                    </div>
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                      libero
+                        ? 'bg-green-100 text-green-700'
+                        : ordineAttivo
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-gray-200 text-gray-600'
+                    }`}>
+                      {statoLabel}
+                    </span>
+                  </div>
+                  <p className="mt-3 font-semibold text-gray-900">Tavolo {tavolo.numero}</p>
+                  <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-600">
+                    <Users className="w-4 h-4" />
+                    {tavolo.capacita} {tavolo.capacita === 1 ? 'posto' : 'posti'}
+                  </p>
+                  {tavolo.posizione && <p className="mt-1 text-xs text-gray-500">{tavolo.posizione}</p>}
+                  {ordineAttivo?.stato === 'CHIUSO' && (
+                    <button
+                      type="button"
+                      onClick={() => handleCloseTable(ordineAttivo)}
+                      disabled={closingOrderId === ordineAttivo.id}
+                      className="mt-3 w-full btn-primary flex items-center justify-center gap-2 px-3 py-2 text-sm disabled:opacity-50"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      {closingOrderId === ordineAttivo.id ? 'Chiusura...' : 'Chiudi tavolo'}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {/* Two columns */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

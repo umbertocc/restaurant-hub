@@ -17,3 +17,6 @@ export const updateStatoOrdine = (id: string, stato: StatoOrdine) =>
   client
     .patch<Ordine>(`/ordini/${id}/stato`, null, { params: { stato } })
     .then((r) => r.data);
+
+export const chiudiTavolo = (id: string) =>
+  client.patch<Ordine>(`/ordini/${id}/chiudi-tavolo`).then((r) => r.data);

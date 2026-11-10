@@ -8,6 +8,7 @@ import { getOrdini, createOrdine, updateOrdine, updateStatoOrdine } from '../api
 import { getCategorieMenu, getMenu } from '../api/menu';
 import { getTavoli } from '../api/tavoli';
 import { ORDERS_CHANGED_EVENT } from '../realtime/ordersRealtime';
+import { getOrdiniOccupantiTavolo } from '../utils/ordini';
 import { Ordine, MenuItem, OrdineItemDTO, StatoOrdine, MenuCategoria, Tavolo } from '../types';
 
 const STATO_STYLE: Record<StatoOrdine, string> = {
@@ -15,6 +16,7 @@ const STATO_STYLE: Record<StatoOrdine, string> = {
   IN_PREPARAZIONE: 'badge bg-amber-100 text-amber-700',
   SERVITO: 'badge bg-green-100 text-green-700',
   CHIUSO: 'badge bg-gray-100 text-gray-500',
+  PAGATO: 'badge bg-purple-100 text-purple-700',
   ANNULLATO: 'badge bg-red-100 text-red-700',
 };
 
@@ -23,6 +25,7 @@ const STATO_LABEL: Record<StatoOrdine, string> = {
   IN_PREPARAZIONE: 'In Preparazione',
   SERVITO: 'Servito',
   CHIUSO: 'Chiuso',
+  PAGATO: 'Pagato',
   ANNULLATO: 'Annullato',
 };
 
@@ -31,6 +34,7 @@ const STATI_AVANZAMENTO: Record<StatoOrdine, StatoOrdine | null> = {
   IN_PREPARAZIONE: 'SERVITO',
   SERVITO: 'CHIUSO',
   CHIUSO: null,
+  PAGATO: null,
   ANNULLATO: null,
 };
 
@@ -40,6 +44,7 @@ const FILTERS: { label: string; value: StatoOrdine | 'ALL' }[] = [
   { label: 'In Preparazione', value: 'IN_PREPARAZIONE' },
   { label: 'Serviti', value: 'SERVITO' },
   { label: 'Chiusi', value: 'CHIUSO' },
+  { label: 'Pagati', value: 'PAGATO' },
   { label: 'Annullati', value: 'ANNULLATO' },
 ];
 
@@ -116,8 +121,7 @@ export default function OrdiniPage() {
 
   const filtered = filter === 'ALL' ? ordini : ordini.filter((o) => o.stato === filter);
   const tavoliOrdinati = [...tavoli].sort((a, b) => a.numero - b.numero);
-  const statiOrdineAttivi: StatoOrdine[] = ['APERTO', 'IN_PREPARAZIONE', 'SERVITO'];
-  const ordiniAttivi = ordini.filter((o) => statiOrdineAttivi.includes(o.stato));
+  const ordiniAttivi = getOrdiniOccupantiTavolo(ordini);
   const tavoliLiberi = tavoliOrdinati.filter(
     (t) => t.disponibile && !ordiniAttivi.some((o) => o.tavoloId === t.id),
   );
@@ -166,6 +170,7 @@ export default function OrdiniPage() {
 
   const openOrderForTable = (tavolo: Tavolo) => {
     const ordine = ordiniAttivi.find((o) => o.tavoloId === tavolo.id);
+    if (ordine?.stato === 'CHIUSO') return;
     if (!ordine) {
       if (tavolo.disponibile) openNewOrder(tavolo);
       return;
@@ -300,7 +305,7 @@ export default function OrdiniPage() {
                   key={tavolo.id}
                   type="button"
                   onClick={() => openOrderForTable(tavolo)}
-                  disabled={!ordineAttivo && !tavolo.disponibile}
+                  disabled={ordineAttivo?.stato === 'CHIUSO' || (!ordineAttivo && !tavolo.disponibile)}
                   aria-label={`Tavolo ${tavolo.numero}, ${statoLabel}, ${tavolo.capacita} posti`}
                   className={`rounded-xl border p-4 text-left transition-shadow ${
                     libero
@@ -308,7 +313,7 @@ export default function OrdiniPage() {
                       : ordineAttivo
                         ? 'border-red-200 bg-red-50'
                         : 'border-gray-200 bg-gray-50'
-                  } ${tavolo.disponibile || ordineAttivo ? 'hover:shadow-md cursor-pointer' : 'cursor-not-allowed opacity-75'}`}
+                  } ${ordineAttivo?.stato !== 'CHIUSO' && (tavolo.disponibile || ordineAttivo) ? 'hover:shadow-md cursor-pointer' : 'cursor-not-allowed opacity-75'}`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/80">
