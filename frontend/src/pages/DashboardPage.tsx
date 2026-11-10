@@ -83,7 +83,6 @@ export default function DashboardPage() {
   const selectedTable = tavoli.find((t) => t.id === selectedTableId) ?? null;
   const selectedOrders = selectedTable ? getOrdiniSedutaTavolo(ordini, selectedTable.id) : [];
   const sedutaTotale = selectedOrders.reduce((sum, o) => sum + Number(o.totale), 0);
-  const tuttiConsegnati = selectedOrders.length > 0 && selectedOrders.every((o) => o.stato === 'CHIUSO');
 
   const handleCloseTable = async (tavoloId: number) => {
     setClosingOrderId(tavoloId);
@@ -320,21 +319,15 @@ export default function DashboardPage() {
                     <span>€ {sedutaTotale.toFixed(2)}</span>
                   </div>
 
-                  {tuttiConsegnati ? (
-                    <button
-                      type="button"
-                      onClick={() => handleCloseTable(selectedTable.id)}
-                      disabled={closingOrderId === selectedTable.id}
-                      className="btn-primary flex w-full items-center justify-center gap-2 px-3 py-2 disabled:opacity-50"
-                    >
-                      <CheckCircle className="h-4 w-4" />
-                      {closingOrderId === selectedTable.id ? 'Chiusura...' : 'Chiudi tavolo'}
-                    </button>
-                  ) : (
-                    <p className="text-center text-xs text-gray-500">
-                      Il tavolo potrà essere chiuso quando tutti gli ordini saranno consegnati.
-                    </p>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleCloseTable(selectedTable.id)}
+                    disabled={closingOrderId === selectedTable.id}
+                    className="btn-primary flex w-full items-center justify-center gap-2 px-3 py-2 disabled:opacity-50"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    {closingOrderId === selectedTable.id ? 'Chiusura...' : 'Chiudi tavolo'}
+                  </button>
                 </>
               ) : (
                 <p className="py-4 text-center text-sm text-gray-500">

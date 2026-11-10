@@ -170,10 +170,6 @@ public class OrdineService {
         if (seduta.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Nessun ordine da chiudere per il tavolo");
         }
-        if (seduta.stream().anyMatch(o -> o.getStato() != Ordine.Stato.CHIUSO)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Il tavolo può essere chiuso solo dopo la consegna di tutti gli ordini");
-        }
         seduta.forEach(o -> o.setStato(Ordine.Stato.PAGATO));
         List<Ordine> saved = ordineRepository.saveAll(seduta);
         saved.forEach(ordineRealtimePublisher::publishStatusUpdated);
