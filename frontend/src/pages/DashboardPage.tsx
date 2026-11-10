@@ -34,6 +34,24 @@ const STATO_PREN_STYLE: Record<string, string> = {
   COMPLETATA: 'badge bg-gray-100 text-gray-500',
 };
 
+function MinutiAttesa({ createdAt }: { createdAt: string }) {
+  const [minuti, setMinuti] = useState(0);
+
+  useEffect(() => {
+    const calc = () => {
+      try {
+        setMinuti(Math.max(0, Math.floor((Date.now() - parseISO(createdAt).getTime()) / 60000)));
+      } catch { /* ignore */ }
+    };
+    calc();
+    const t = setInterval(calc, 30000);
+    return () => clearInterval(t);
+  }, [createdAt]);
+
+  const color = minuti >= 20 ? 'text-red-500' : minuti >= 10 ? 'text-amber-500' : 'text-green-500';
+  return <span className={`font-bold ${color}`}>{minuti}m</span>;
+}
+
 function Spinner() {
   return (
     <div className="flex items-center justify-center h-64">
@@ -361,7 +379,7 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-sm font-medium text-gray-800">Tavolo {o.tavoloId}</p>
                     <p className="text-xs text-gray-400">
-                      {(() => { try { return format(parseISO(o.createdAt), 'HH:mm'); } catch { return '—'; } })()} · {o.items.length} voci
+                      Ricevuto alle {(() => { try { return format(parseISO(o.createdAt), 'HH:mm'); } catch { return '—'; } })()} · <MinutiAttesa createdAt={o.createdAt} /> fa · {o.items.length} voci
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
