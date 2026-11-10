@@ -18,5 +18,5 @@ export const updateStatoOrdine = (id: string, stato: StatoOrdine) =>
     .patch<Ordine>(`/ordini/${id}/stato`, null, { params: { stato } })
     .then((r) => r.data);
 
-export const chiudiTavolo = (id: string) =>
-  client.patch<Ordine>(`/ordini/${id}/chiudi-tavolo`).then((r) => r.data);
+export const chiudiTavolo = (tavoloId: number) =>
+  client.patch<Ordine[]>(`/ordini/tavoli/${tavoloId}/chiudi`).then((r) => r.data);

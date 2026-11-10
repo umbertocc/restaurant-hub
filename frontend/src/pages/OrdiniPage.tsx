@@ -8,7 +8,7 @@ import { getOrdini, createOrdine, updateOrdine, updateStatoOrdine } from '../api
 import { getCategorieMenu, getMenu } from '../api/menu';
 import { getTavoli } from '../api/tavoli';
 import { ORDERS_CHANGED_EVENT } from '../realtime/ordersRealtime';
-import { getOrdiniOccupantiTavolo } from '../utils/ordini';
+import { getOrdiniOccupantiTavolo, getOrdinePrincipaleTavolo } from '../utils/ordini';
 import { Ordine, MenuItem, OrdineItemDTO, StatoOrdine, MenuCategoria, Tavolo } from '../types';
 
 const STATO_STYLE: Record<StatoOrdine, string> = {
@@ -169,7 +169,7 @@ export default function OrdiniPage() {
   };
 
   const openOrderForTable = (tavolo: Tavolo) => {
-    const ordine = ordiniAttivi.find((o) => o.tavoloId === tavolo.id);
+    const ordine = getOrdinePrincipaleTavolo(ordini, tavolo.id);
     if (ordine?.stato === 'CHIUSO') return;
     if (!ordine) {
       if (tavolo.disponibile) openNewOrder(tavolo);
@@ -293,7 +293,7 @@ export default function OrdiniPage() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {tavoliOrdinati.map((tavolo) => {
-              const ordineAttivo = ordiniAttivi.find((o) => o.tavoloId === tavolo.id);
+              const ordineAttivo = getOrdinePrincipaleTavolo(ordini, tavolo.id);
               const libero = tavolo.disponibile && !ordineAttivo;
               const statoLabel = ordineAttivo
                 ? `Occupato · ${STATO_LABEL[ordineAttivo.stato]}`

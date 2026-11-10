@@ -51,7 +51,7 @@ public class SecurityConfig {
                 // PATCH approvazione ristorante: autenticazione obbligatoria
                 .requestMatchers(HttpMethod.PATCH, "/api/ristoranti/*/approva").authenticated()
                 // Permessi per profilo del dispositivo (il token senza profilo vale admin)
-                .requestMatchers(HttpMethod.PATCH, "/api/ordini/*/chiudi-tavolo").hasAuthority("PROFILO_admin")
+                .requestMatchers(HttpMethod.PATCH, "/api/ordini/tavoli/*/chiudi").hasAuthority("PROFILO_admin")
                 .requestMatchers(HttpMethod.GET, "/api/tavoli", "/api/tavoli/**").hasAnyAuthority("PROFILO_admin", "PROFILO_cameriere")
                 .requestMatchers(HttpMethod.PUT, "/api/tavoli/**").hasAnyAuthority("PROFILO_admin", "PROFILO_cameriere")
                 .requestMatchers("/api/tavoli", "/api/tavoli/**").hasAuthority("PROFILO_admin")

@@ -2,14 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, isToday, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { ShoppingCart, Calendar, Clock, TrendingUp, ChefHat, CheckCircle, TableProperties, Users } from 'lucide-react';
+import { ShoppingCart, Calendar, Clock, TrendingUp, ChefHat, CheckCircle, TableProperties, Users, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { chiudiTavolo, getOrdini } from '../api/ordini';
 import { getPrenotazioni } from '../api/prenotazioni';
 import { getTavoli } from '../api/tavoli';
 import { Ordine, Prenotazione, Tavolo } from '../types';
 import { ORDERS_CHANGED_EVENT } from '../realtime/ordersRealtime';
-import { getOrdiniOccupantiTavolo } from '../utils/ordini';
+import { getOrdiniOccupantiTavolo, getOrdiniSedutaTavolo } from '../utils/ordini';
 
 const STATO_ORDINE_STYLE: Record<string, string> = {
   APERTO: 'badge bg-blue-100 text-blue-700',
@@ -50,7 +50,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [tableActionError, setTableActionError] = useState('');
-  const [closingOrderId, setClosingOrderId] = useState<string | null>(null);
+  const [closingOrderId, setClosingOrderId] = useState<number | null>(null);
+  const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
 
   const caricaDati = useCallback(() => {
     if (!ristorante) return;
@@ -79,13 +80,18 @@ export default function DashboardPage() {
   const tavoliLiberi = tavoliOrdinati.filter(
     (t) => t.disponibile && !ordiniAttivi.some((o) => o.tavoloId === t.id),
   );
+  const selectedTable = tavoli.find((t) => t.id === selectedTableId) ?? null;
+  const selectedOrders = selectedTable ? getOrdiniSedutaTavolo(ordini, selectedTable.id) : [];
+  const sedutaTotale = selectedOrders.reduce((sum, o) => sum + Number(o.totale), 0);
+  const tuttiConsegnati = selectedOrders.length > 0 && selectedOrders.every((o) => o.stato === 'CHIUSO');
 
-  const handleCloseTable = async (ordine: Ordine) => {
-    setClosingOrderId(ordine.id);
+  const handleCloseTable = async (tavoloId: number) => {
+    setClosingOrderId(tavoloId);
     setTableActionError('');
     try {
-      const updated = await chiudiTavolo(ordine.id);
-      setOrdini((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
+      const updated = await chiudiTavolo(tavoloId);
+      setOrdini((prev) => prev.map((o) => updated.find((u) => u.id === o.id) ?? o));
+      setSelectedTableId(null);
     } catch {
       setTableActionError('Errore nella chiusura del tavolo. Riprova.');
     } finally {
@@ -184,10 +190,15 @@ export default function DashboardPage() {
                   ? 'Libero'
                   : 'Non disponibile';
               return (
-                <div
+                <button
                   key={tavolo.id}
+                  type="button"
+                  onClick={() => {
+                    setTableActionError('');
+                    setSelectedTableId(tavolo.id);
+                  }}
                   aria-label={`Tavolo ${tavolo.numero}, ${statoLabel}, ${tavolo.capacita} posti`}
-                  className={`rounded-xl border p-4 ${
+                  className={`rounded-xl border p-4 text-left transition-shadow hover:shadow-md ${
                     libero
                       ? 'border-green-200 bg-green-50'
                       : ordineAttivo
@@ -215,23 +226,130 @@ export default function DashboardPage() {
                     {tavolo.capacita} {tavolo.capacita === 1 ? 'posto' : 'posti'}
                   </p>
                   {tavolo.posizione && <p className="mt-1 text-xs text-gray-500">{tavolo.posizione}</p>}
-                  {ordineAttivo?.stato === 'CHIUSO' && (
-                    <button
-                      type="button"
-                      onClick={() => handleCloseTable(ordineAttivo)}
-                      disabled={closingOrderId === ordineAttivo.id}
-                      className="mt-3 w-full btn-primary flex items-center justify-center gap-2 px-3 py-2 text-sm disabled:opacity-50"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      {closingOrderId === ordineAttivo.id ? 'Chiusura...' : 'Chiudi tavolo'}
-                    </button>
-                  )}
-                </div>
+                </button>
               );
             })}
           </div>
         )}
       </section>
+
+      {selectedTable && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setSelectedTableId(null)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="table-details-title"
+            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="flex items-center justify-between border-b px-6 py-4">
+              <div>
+                <h2 id="table-details-title" className="text-lg font-semibold text-gray-900">
+                  Tavolo {selectedTable.numero}
+                </h2>
+                <p className="text-sm text-gray-500">
+                  {selectedTable.capacita} {selectedTable.capacita === 1 ? 'posto' : 'posti'}
+                  {selectedTable.posizione ? ` · ${selectedTable.posizione}` : ''}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedTableId(null)}
+                className="btn-ghost p-1.5"
+                aria-label="Chiudi dettagli tavolo"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </header>
+
+            <div className="space-y-4 p-6">
+              {selectedOrders.length > 0 ? (
+                <>
+                  {selectedOrders.map((ordine, index) => (
+                    <div key={ordine.id} className="space-y-3 rounded-lg border border-gray-100 p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500">
+                          Ordine {index + 1} · {(() => {
+                            try { return format(parseISO(ordine.createdAt), 'd MMM, HH:mm', { locale: it }); }
+                            catch { return '—'; }
+                          })()}
+                        </span>
+                        <span className={STATO_ORDINE_STYLE[ordine.stato] ?? 'badge bg-gray-100 text-gray-500'}>
+                          {STATO_ORDINE_LABEL[ordine.stato] ?? ordine.stato.replace('_', ' ')}
+                        </span>
+                      </div>
+
+                      <div className="divide-y divide-gray-100">
+                        {ordine.items.map((item) => (
+                          <div key={item.id} className="flex justify-between gap-4 py-2">
+                            <div>
+                              <p className="text-sm font-medium text-gray-800">
+                                {item.quantita}× {item.nomeMenuItem ?? `Prodotto #${item.menuItemId}`}
+                              </p>
+                              {item.note && <p className="mt-0.5 text-xs text-gray-500">{item.note}</p>}
+                            </div>
+                            <span className="whitespace-nowrap text-sm text-gray-700">
+                              € {Number(item.subtotale).toFixed(2)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {ordine.note && (
+                        <p className="text-sm text-gray-600"><span className="font-medium">Note:</span> {ordine.note}</p>
+                      )}
+
+                      <div className="space-y-1 border-t pt-2 text-sm">
+                        <div className="flex justify-between text-gray-600">
+                          <span>{ordine.coperti} coperti</span>
+                          <span>€ {(Number(ordine.prezzoCoperto) * ordine.coperti).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between font-semibold text-gray-900">
+                          <span>Subtotale ordine</span>
+                          <span>€ {Number(ordine.totale).toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  <div className="flex justify-between border-t pt-3 text-base font-bold text-gray-900">
+                    <span>Totale tavolo</span>
+                    <span>€ {sedutaTotale.toFixed(2)}</span>
+                  </div>
+
+                  {tuttiConsegnati ? (
+                    <button
+                      type="button"
+                      onClick={() => handleCloseTable(selectedTable.id)}
+                      disabled={closingOrderId === selectedTable.id}
+                      className="btn-primary flex w-full items-center justify-center gap-2 px-3 py-2 disabled:opacity-50"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      {closingOrderId === selectedTable.id ? 'Chiusura...' : 'Chiudi tavolo'}
+                    </button>
+                  ) : (
+                    <p className="text-center text-xs text-gray-500">
+                      Il tavolo potrà essere chiuso quando tutti gli ordini saranno consegnati.
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="py-4 text-center text-sm text-gray-500">
+                  {selectedTable.disponibile ? 'Tavolo libero, nessun ordine associato.' : 'Tavolo non disponibile.'}
+                </p>
+              )}
+              {tableActionError && (
+                <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  {tableActionError}
+                </p>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
 
       {/* Two columns */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

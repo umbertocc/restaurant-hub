@@ -57,9 +57,10 @@ public class OrdineController {
         return ordineService.aggiornaStato(id, stato);
     }
 
-    @PatchMapping("/{id}/chiudi-tavolo")
-    public Ordine chiudiTavolo(@PathVariable UUID id, HttpServletRequest request) {
+    // PATCH /api/ordini/tavoli/{tavoloId}/chiudi  (admin)
+    @PatchMapping("/tavoli/{tavoloId}/chiudi")
+    public List<Ordine> chiudiTavolo(@PathVariable Long tavoloId, HttpServletRequest request) {
         Long ristoranteId = (Long) request.getAttribute("ristoranteId");
-        return ordineService.chiudiTavolo(id, ristoranteId);
+        return ordineService.chiudiTavolo(tavoloId, ristoranteId);
     }
 }

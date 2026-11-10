@@ -1,24 +1,18 @@
 import { Ordine } from '../types';
 
+// Un tavolo resta occupato finché ha ordini non ancora pagati né annullati (seduta corrente).
 export function getOrdiniOccupantiTavolo(ordini: Ordine[]): Ordine[] {
-  const ultimoOrdinePerTavolo = new Map<number, Ordine>();
+  return ordini.filter((ordine) => ordine.stato !== 'PAGATO' && ordine.stato !== 'ANNULLATO');
+}
 
-  for (const ordine of ordini) {
-    const precedente = ultimoOrdinePerTavolo.get(ordine.tavoloId);
-    const dataOrdine = Date.parse(ordine.createdAt);
-    const dataPrecedente = precedente ? Date.parse(precedente.createdAt) : Number.NaN;
+// Ordine modificabile più recente; se tutti sono consegnati (CHIUSO) restituisce l'ultimo.
+export function getOrdinePrincipaleTavolo(ordini: Ordine[], tavoloId: number): Ordine | undefined {
+  const seduta = getOrdiniSedutaTavolo(ordini, tavoloId);
+  return [...seduta].reverse().find((o) => o.stato !== 'CHIUSO') ?? seduta[seduta.length - 1];
+}
 
-    if (!precedente
-      || (Number.isFinite(dataOrdine)
-        && (!Number.isFinite(dataPrecedente) || dataOrdine >= dataPrecedente))) {
-      ultimoOrdinePerTavolo.set(ordine.tavoloId, ordine);
-    }
-  }
-
-  return Array.from(ultimoOrdinePerTavolo.values()).filter(
-    (ordine) => ordine.stato === 'APERTO'
-      || ordine.stato === 'IN_PREPARAZIONE'
-      || ordine.stato === 'SERVITO'
-      || ordine.stato === 'CHIUSO',
-  );
+export function getOrdiniSedutaTavolo(ordini: Ordine[], tavoloId: number): Ordine[] {
+  return getOrdiniOccupantiTavolo(ordini)
+    .filter((ordine) => ordine.tavoloId === tavoloId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }

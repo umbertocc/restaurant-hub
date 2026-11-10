@@ -162,18 +162,21 @@ public class OrdineService {
     }
 
     @Transactional
-    public Ordine chiudiTavolo(UUID id, Long ristoranteId) {
-        Ordine ordine = getById(id);
-        if (!ordine.getRistoranteId().equals(ristoranteId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordine non trovato");
+    public List<Ordine> chiudiTavolo(Long tavoloId, Long ristoranteId) {
+        List<Ordine> seduta = ordineRepository.findByRistoranteIdAndTavoloIdAndStatoIn(
+                ristoranteId, tavoloId,
+                List.of(Ordine.Stato.APERTO, Ordine.Stato.IN_PREPARAZIONE,
+                        Ordine.Stato.SERVITO, Ordine.Stato.CHIUSO));
+        if (seduta.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Nessun ordine da chiudere per il tavolo");
         }
-        if (ordine.getStato() != Ordine.Stato.CHIUSO) {
+        if (seduta.stream().anyMatch(o -> o.getStato() != Ordine.Stato.CHIUSO)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Il tavolo può essere chiuso solo dopo la consegna dell'ordine");
+                    "Il tavolo può essere chiuso solo dopo la consegna di tutti gli ordini");
         }
-        ordine.setStato(Ordine.Stato.PAGATO);
-        Ordine saved = ordineRepository.save(ordine);
-        ordineRealtimePublisher.publishStatusUpdated(saved);
+        seduta.forEach(o -> o.setStato(Ordine.Stato.PAGATO));
+        List<Ordine> saved = ordineRepository.saveAll(seduta);
+        saved.forEach(ordineRealtimePublisher::publishStatusUpdated);
         return saved;
     }
 }
